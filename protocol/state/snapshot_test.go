@@ -91,7 +91,7 @@ func TestApplyBlock(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if snap.NonceTree.RootHash() != (bc.Hash{}) {
+	if snap.NonceTree.RootHash() != ([32]byte{}) {
 		t.Error("got non-empty nonce tree")
 	}
 

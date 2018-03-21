@@ -155,7 +155,7 @@ func TestGenerateBlock(t *testing.T) {
 	// TODO(bobg): verify these hashes are correct
 	wantTxRoot := mustDecodeHash("e437b69d1dd70254e165163415e69830b8cbf2eded94b79aa5de911e0691a89f")
 	wantContractsRoot := mustDecodeHash("5ff56d780f78809e63fb7be7fdbd7bf825704914311b4d0819c50d411f3b662d")
-	wantNoncesRoot := new(patricia.Tree).RootHash()
+	wantNoncesRoot := bc.NewHash(new(patricia.Tree).RootHash())
 
 	b1ID := b1.Hash()
 	want := &bc.Block{

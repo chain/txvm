@@ -107,10 +107,10 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 	txRoot := bc.TxMerkleRoot(b.Transactions)
 	b.TransactionsRoot = &txRoot
 
-	contractRoot := newSnapshot.ContractsTree.RootHash()
+	contractRoot := bc.NewHash(newSnapshot.ContractsTree.RootHash())
 	b.ContractsRoot = &contractRoot
 
-	nonceRoot := newSnapshot.NonceTree.RootHash()
+	nonceRoot := bc.NewHash(newSnapshot.NonceTree.RootHash())
 	b.NoncesRoot = &nonceRoot
 
 	err := newSnapshot.ApplyBlockHeader(b.BlockHeader)
@@ -161,10 +161,10 @@ func (c *Chain) CommitBlock(ctx context.Context, block *bc.Block) error {
 	if err != nil {
 		return err
 	}
-	if *block.ContractsRoot != snapshot.ContractsTree.RootHash() {
+	if block.ContractsRoot.Byte32() != snapshot.ContractsTree.RootHash() {
 		return ErrBadContractsRoot
 	}
-	if *block.NoncesRoot != snapshot.NonceTree.RootHash() {
+	if block.NoncesRoot.Byte32() != snapshot.NonceTree.RootHash() {
 		return ErrBadNoncesRoot
 	}
 	return c.finalizeCommitState(ctx, snapshot)
@@ -207,7 +207,7 @@ func NewInitialBlock(pubkeys []ed25519.PublicKey, quorum int, timestamp time.Tim
 	// so that other packages (e.g. chain/protocol/validation) unit tests can
 	// call this function.
 	root := bc.TxMerkleRoot(nil) // calculate the zero value of the tx merkle root
-	patRoot := new(patricia.Tree).RootHash()
+	patRoot := bc.NewHash(new(patricia.Tree).RootHash())
 
 	var pkBytes [][]byte
 	for _, pk := range pubkeys {

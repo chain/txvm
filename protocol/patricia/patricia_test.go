@@ -12,7 +12,6 @@ import (
 	"testing/quick"
 
 	"github.com/chain/txvm/crypto/sha3"
-	"github.com/chain/txvm/protocol/bc"
 	"github.com/chain/txvm/testutil"
 )
 
@@ -77,7 +76,7 @@ func TestRootHashBug(t *testing.T) {
 		t.Fatal(err)
 	}
 	if tr.RootHash() == before {
-		t.Errorf("before and after root hash is %s", before.String())
+		t.Errorf("before and after root hash is %x", before[:])
 	}
 }
 
@@ -103,22 +102,22 @@ func TestLeafVsInternalNodes(t *testing.T) {
 
 	// Force calculation of all the hashes.
 	tr0.RootHash()
-	t.Logf("first child = %s, %t", tr0.root.children[0].hash, tr0.root.children[0].isLeaf)
-	t.Logf("second child = %s, %t", tr0.root.children[1].hash, tr0.root.children[1].isLeaf)
+	t.Logf("first child = %x, %t", tr0.root.children[0].hash[:], tr0.root.children[0].isLeaf)
+	t.Logf("second child = %x, %t", tr0.root.children[1].hash[:], tr0.root.children[1].isLeaf)
 
 	// Create a second tree using an internal node from tr1.
 	tr1 := new(Tree)
-	err = tr1.Insert(tr0.root.children[0].hash.Bytes()) // internal node of tr0
+	err = tr1.Insert(tr0.root.children[0].hash[:]) // internal node of tr0
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tr1.Insert(tr0.root.children[1].hash.Bytes()) // sibling leaf node of above node ^
+	err = tr1.Insert(tr0.root.children[1].hash[:]) // sibling leaf node of above node ^
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if tr1.RootHash() == tr0.RootHash() {
-		t.Errorf("tr0 and tr1 have matching root hashes: %x", tr1.RootHash().Bytes())
+		t.Errorf("tr0 and tr1 have matching root hashes: %x", tr1.RootHash())
 	}
 }
 
@@ -240,7 +239,7 @@ func TestInsert(t *testing.T) {
 		root: &node{key: bits("11111111"), hash: hashPtr(hashForLeaf(bits("11111111"))), isLeaf: true, keybit: 7},
 	}
 	if !testutil.DeepEqual(tr.root, want.root) {
-		log.Printf("want hash? %x", hashForLeaf(bits("11111111")).Bytes())
+		log.Printf("want hash? %x", hashForLeaf(bits("11111111")))
 		t.Log("insert into empty tree")
 		t.Fatalf("got:\n%swant:\n%s", pretty(tr), pretty(want))
 	}
@@ -640,13 +639,13 @@ func TestRootHashes(t *testing.T) {
 	want := mustDecodeHash("438d57e753b849f51cdc69d2779715979dda4b4ce75653305a1d24cafd324fda")
 	got := tr.RootHash()
 	if got != want {
-		t.Errorf("RootHash(0-999) = %x want %x", got.Bytes(), want.Bytes())
+		t.Errorf("RootHash(0-999) = %x want %x", got, want)
 	}
 
 	want2 := mustDecodeHash("cb8b32a2823d4c35f697caa5698ca95b9ab043be9db238256e7d38408496681b")
 	got2 := tr2.RootHash()
 	if got2 != want2 {
-		t.Errorf("RootHash(SHA3(0-999)) = %x want %x", got2.Bytes(), want2.Bytes())
+		t.Errorf("RootHash(SHA3(0-999)) = %x want %x", got2, want2)
 	}
 }
 
@@ -688,22 +687,22 @@ func bits(lit string) []byte {
 	return append(b[:], byte(n))
 }
 
-func hashForLeaf(item []byte) bc.Hash {
-	return bc.NewHash(sha3.Sum256(append([]byte{0x00}, item...)))
+func hashForLeaf(item []byte) [32]byte {
+	return sha3.Sum256(append([]byte{0x00}, item...))
 }
 
-func hashForNonLeaf(a, b bc.Hash) bc.Hash {
+func hashForNonLeaf(a, b [32]byte) [32]byte {
 	d := []byte{0x01}
-	d = append(d, a.Bytes()...)
-	d = append(d, b.Bytes()...)
-	return bc.NewHash(sha3.Sum256(d))
+	d = append(d, a[:]...)
+	d = append(d, b[:]...)
+	return sha3.Sum256(d)
 }
 
-func hashPtr(h bc.Hash) *bc.Hash {
+func hashPtr(h [32]byte) *[32]byte {
 	return &h
 }
 
-func mustDecodeHash(str string) bc.Hash {
+func mustDecodeHash(str string) [32]byte {
 	dec, err := hex.DecodeString(str)
 	if err != nil {
 		panic(err)
@@ -711,5 +710,7 @@ func mustDecodeHash(str string) bc.Hash {
 	if len(dec) != 32 {
 		panic("bad hash length")
 	}
-	return bc.HashFromBytes(dec)
+	var h [32]byte
+	copy(h[:], dec)
+	return h
 }

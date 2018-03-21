@@ -21,10 +21,10 @@ package patricia
 
 import (
 	"bytes"
+	"io"
 
 	"github.com/chain/txvm/crypto/sha3pool"
 	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/protocol/bc"
 )
 
 var (
@@ -98,11 +98,11 @@ func lookup(n *node, key []byte) *node {
 // If item itself is already in t, Insert does nothing
 // (and this is not an error).
 func (t *Tree) Insert(item []byte) error {
-	var hash bc.Hash
+	var hash [32]byte
 	h := sha3pool.Get256()
 	h.Write(leafPrefix)
 	h.Write(item)
-	hash.ReadFrom(h)
+	io.ReadFull(h, hash[:])
 	sha3pool.Put256(h)
 
 	if t.root == nil {
@@ -115,7 +115,7 @@ func (t *Tree) Insert(item []byte) error {
 	return err
 }
 
-func insert(n *node, key []byte, hash *bc.Hash) (*node, error) {
+func insert(n *node, key []byte, hash *[32]byte) (*node, error) {
 	if bytes.Equal(n.key, key) && n.keybit == 7 {
 		if !n.isLeaf {
 			return n, errors.Wrap(errors.New("key provided is a prefix to other keys"))
@@ -203,10 +203,10 @@ func delete(n *node, key []byte) *node {
 }
 
 // RootHash returns the Merkle root of the tree.
-func (t *Tree) RootHash() bc.Hash {
+func (t *Tree) RootHash() [32]byte {
 	root := t.root
 	if root == nil {
-		return bc.Hash{}
+		return [32]byte{}
 	}
 	return root.Hash()
 }
@@ -274,13 +274,13 @@ func childIdx(key []byte, len int, bit byte) byte {
 type node struct {
 	key      []byte
 	keybit   byte
-	hash     *bc.Hash
+	hash     *[32]byte
 	isLeaf   bool
 	children [2]*node
 }
 
 // Hash will return the hash for this node.
-func (n *node) Hash() bc.Hash {
+func (n *node) Hash() [32]byte {
 	n.calcHash()
 	return *n.hash
 }
@@ -294,11 +294,11 @@ func (n *node) calcHash() {
 	h.Write(interiorPrefix)
 	for _, c := range n.children {
 		c.calcHash()
-		c.hash.WriteTo(h)
+		h.Write(c.hash[:])
 	}
 
-	var hash bc.Hash
-	hash.ReadFrom(h)
+	var hash [32]byte
+	io.ReadFull(h, hash[:])
 	n.hash = &hash
 	sha3pool.Put256(h)
 }

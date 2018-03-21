@@ -50,9 +50,9 @@ func (c *Chain) Recover(ctx context.Context) (*state.Snapshot, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "applying block")
 		}
-		if *b.ContractsRoot != snapshot.ContractsTree.RootHash() {
+		if b.ContractsRoot.Byte32() != snapshot.ContractsTree.RootHash() {
 			return nil, fmt.Errorf("block %d has contract root %x; snapshot has root %x",
-				b.Height, b.ContractsRoot.Bytes(), snapshot.ContractsTree.RootHash().Bytes())
+				b.Height, b.ContractsRoot.Bytes(), snapshot.ContractsTree.RootHash())
 		}
 	}
 	if b != nil {
