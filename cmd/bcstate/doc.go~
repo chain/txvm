@@ -1,0 +1,7 @@
+/*
+
+Command bcstate reads and writes blockchain state, optionally applying
+a block.
+
+*/
+package main
