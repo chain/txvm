@@ -81,10 +81,10 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 			break
 		}
 
-		// Filter out transactions that have invalid nonces.
-		err := c.CheckNonceWindow(tx, timestampMS)
+		// Filter out transactions that conflict with the block timestamp.
+		err := c.checkTransactionTime(tx, timestampMS)
 		if err != nil {
-			log.Printkv(ctx, "event", "bad nonce window", "error", err, "tx", hex.EncodeToString(tx.WitnessProg))
+			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.WitnessProg))
 			continue
 		}
 
@@ -94,7 +94,7 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 		}
 
 		// Filter out double-spends etc.
-		err = newSnapshot.ApplyTx(b.TimestampMs, tx)
+		err = newSnapshot.ApplyTx(tx)
 		if err != nil {
 			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.WitnessProg))
 			continue

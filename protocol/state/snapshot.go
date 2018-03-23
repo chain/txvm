@@ -7,7 +7,6 @@ package state
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
 
 	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/protocol/bc"
@@ -87,7 +86,7 @@ func (s *Snapshot) ApplyBlock(block *bc.Block) error {
 	}
 
 	for i, tx := range block.Transactions {
-		err = s.ApplyTx(block.TimestampMs, tx)
+		err = s.ApplyTx(tx)
 		if err != nil {
 			return errors.Wrapf(err, "applying block transaction %d", i)
 		}
@@ -117,22 +116,9 @@ func (s *Snapshot) ApplyBlockHeader(bh *bc.BlockHeader) error {
 }
 
 // ApplyTx updates s in place.
-func (s *Snapshot) ApplyTx(blockTimeMS uint64, tx *bc.Tx) error {
+func (s *Snapshot) ApplyTx(tx *bc.Tx) error {
 	if s.InitialBlockID.IsZero() {
 		return fmt.Errorf("cannot apply a transaction to an empty state")
-	}
-
-	if blockTimeMS > math.MaxInt64 {
-		return fmt.Errorf("block timestamp %d out of int64 range", blockTimeMS)
-	}
-
-	for _, tr := range tx.Timeranges {
-		if tr.MaxMS > 0 && int64(blockTimeMS) > tr.MaxMS {
-			return fmt.Errorf("block timestamp %d outside transaction time range %d-%d", blockTimeMS, tr.MinMS, tr.MaxMS)
-		}
-		if tr.MinMS > 0 && int64(blockTimeMS) > 0 && int64(blockTimeMS) < tr.MinMS {
-			return fmt.Errorf("block timestamp %d outside transaction time range %d-%d", blockTimeMS, tr.MinMS, tr.MaxMS)
-		}
 	}
 
 	nonceTree := new(patricia.Tree)
