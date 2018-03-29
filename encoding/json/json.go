@@ -43,24 +43,17 @@ func (m *Map) UnmarshalJSON(text []byte) error {
 	// UnmarshalJSON takes only valid json, we can take advantage of this
 	// to see if the first character is either '{' for an object or 'n'
 	// for null.
-	var first byte
-	for _, c := range text {
-		if !isSpace(c) {
-			first = c
-			break
-		}
+	v, err := ValueType(text)
+	if err != nil {
+		return err
 	}
-	if first == 'n' {
+	switch v {
+	case Null:
 		return nil
-	} else if first != '{' {
+	case Object:
+		*m = text
+		return nil
+	default:
 		return ErrNotMap
 	}
-
-	*m = text
-	return nil
-}
-
-// taken from std encoding/json
-func isSpace(c byte) bool {
-	return c == ' ' || c == '\t' || c == '\r' || c == '\n'
 }
