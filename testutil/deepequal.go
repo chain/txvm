@@ -1,7 +1,10 @@
 package testutil
 
 import (
+	"encoding/json"
 	"reflect"
+	"sort"
+	"testing"
 	"unsafe"
 )
 
@@ -152,4 +155,86 @@ func isEmpty(v reflect.Value) bool {
 		return v.IsNil() || v.Len() == 0
 	}
 	return false
+}
+
+func WithSort(path []string, less func(a, b interface{}) bool) func(a, b interface{}) {
+	return func(a, b interface{}) {
+		for _, p := range path {
+			mapA, ok := a.(map[string]interface{})
+			if !ok {
+				return
+			}
+			a = mapA[p]
+			mapB, ok := b.(map[string]interface{})
+			if !ok {
+				return
+			}
+			b = mapB[p]
+		}
+		aSlice, ok := a.([]interface{})
+		if !ok {
+			return
+		}
+		bSlice, ok := b.([]interface{})
+		if !ok {
+			return
+		}
+		sort.Slice(aSlice, func(i, j int) bool { return less(aSlice[i], aSlice[j]) })
+		sort.Slice(bSlice, func(i, j int) bool { return less(bSlice[i], bSlice[j]) })
+	}
+}
+
+func IsJSONSubset(t testing.TB, a, b []byte, opts ...func(a, b interface{})) bool {
+	var aval, bval interface{}
+	err := json.Unmarshal(a, &aval)
+	if err != nil {
+		t.Fatalf("a: %s is not valid json", string(a))
+	}
+	err = json.Unmarshal(b, &bval)
+	if err != nil {
+		t.Fatalf("b: %s is not valid json", string(b))
+	}
+	for _, o := range opts {
+		o(aval, bval)
+	}
+	return isSubset(aval, bval)
+}
+
+func isSubset(a, b interface{}) bool {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return false
+	}
+	switch va := a.(type) {
+	case map[string]interface{}:
+		// don't check length or presence of fields
+		// exclusively in a, since this is a subset check
+		vb := b.(map[string]interface{})
+		for k := range vb {
+			if !isSubset(va[k], vb[k]) {
+				return false
+			}
+		}
+		return true
+	case []interface{}:
+		vb := b.([]interface{})
+		if len(va) != len(vb) {
+			return false
+		}
+		for i := range va {
+			if !isSubset(va[i], vb[i]) {
+				return false
+			}
+		}
+		return true
+	case float64:
+		return va == b.(float64)
+	case bool:
+		return va == b.(bool)
+	case string:
+		return va == b.(string)
+	case nil:
+		return true
+	default:
+		return false
+	}
 }
