@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/chain/txvm/errors"
 )
@@ -30,8 +29,6 @@ var (
 )
 
 const (
-	rfc3339NanoFixed = "2006-01-02T15:04:05.000000000Z07:00"
-
 	// pairDelims contains a list of characters that may be used as delimeters
 	// between key-value pairs in a log entry. Keys and values will be quoted or
 	// otherwise formatted to ensure that key-value extraction is unambiguous.
@@ -44,9 +41,7 @@ const (
 
 // Conventional key names for log entries
 const (
-	KeyCaller = "at" // location of caller
-	KeyTime   = "t"  // time of call
-
+	KeyCaller  = "at"      // location of caller
 	KeyMessage = "message" // produced by Message
 	KeyError   = "error"   // produced by Error
 	KeyStack   = "stack"   // used by Printkv to print stack on subsequent lines
@@ -124,14 +119,8 @@ func Printkv(ctx context.Context, keyvals ...interface{}) {
 		keyvals = append(keyvals, "", keyLogError, "odd number of log params")
 	}
 
-	t := time.Now().UTC()
-
 	// Prepend the log entry with auto-generated fields.
-	out := fmt.Sprintf(
-		"%s=%s %s=%s",
-		KeyCaller, caller(),
-		KeyTime, formatValue(t.Format(rfc3339NanoFixed)),
-	)
+	out := fmt.Sprintf("%s=%s", KeyCaller, caller())
 
 	var stack interface{}
 	for i := 0; i < len(keyvals); i += 2 {
