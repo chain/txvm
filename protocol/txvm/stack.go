@@ -56,14 +56,10 @@ func (s *stack) roll(n int64) error {
 	if n < 0 || n >= int64(len(*s)) {
 		return errors.Wrapf(errors.WithData(ErrStackRange, "len(stack)", len(*s)), "roll %d", n)
 	}
-	i := int64(len(*s)) - 1 - n
-	item := (*s)[i]
-	before := (*s)[:i]
-	after := (*s)[i+1:]
-	*s = make([]Item, 0, len(before)+len(after)+1)
-	*s = append(*s, before...)
-	*s = append(*s, after...)
-	*s = append(*s, item)
+	v := *s
+	i := int64(len(v)) - 1 - n
+	item := v[i]
+	*s = append(append(v[:i], v[i+1:]...), item)
 	return nil
 }
 
@@ -71,14 +67,11 @@ func (s *stack) bury(n int64) error {
 	if n < 0 || n >= int64(len(*s)) {
 		return errors.Wrapf(errors.WithData(ErrStackRange, "len(stack)", len(*s)), "bury %d", n)
 	}
-	item, _ := s.pop()
-	i := int64(len(*s)) - n
-	before := (*s)[:i]
-	after := (*s)[i:]
-	*s = make([]Item, 0, len(before)+len(after)+1)
-	*s = append([]Item{}, before...)
-	*s = append(*s, item)
-	*s = append(*s, after...)
+	v := *s
+	item := v[len(v)-1]
+	i := int64(len(v)) - n - 1
+	copy(v[i+1:], v[i:len(v)-1])
+	v[i] = item
 	return nil
 }
 
