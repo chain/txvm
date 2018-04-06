@@ -1,6 +1,7 @@
 package txvm
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
@@ -66,6 +67,33 @@ func GetRunlimit(runlimit *int64) Option {
 		vm.onExit = append(vm.onExit, func(vm *VM) {
 			*runlimit = vm.runlimit
 		})
+	}
+}
+
+// Resumer can be passed as an option to Validate. It acts like
+// StopAfterFinalize, but additionally writes a function to the
+// given pointer that can be used to pick up execution after the
+// finalize step. This function can be called only once, since
+// calling it will affect the VM state.
+func Resumer(f *func(rest []byte) error) Option {
+	var called bool
+	return func(vm *VM) {
+		vm.stopAfterFinalize = true
+		*f = func(rest []byte) (err error) {
+			if called {
+				return errors.New("resumer function called twice")
+			}
+			called = true
+
+			defer vm.recoverError(&err)
+			vm.stopAfterFinalize = false
+			vm.exec(rest)
+			if !vm.contract.stack.isEmpty() || !vm.argstack.isEmpty() {
+				return vm.wraperr(ErrResidue)
+			}
+			vm.runHooks(vm.onExit)
+			return nil
+		}
 	}
 }
 
