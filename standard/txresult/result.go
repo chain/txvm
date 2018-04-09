@@ -20,7 +20,7 @@ type Result struct {
 	Inputs      []*Input
 	Issuances   []*Issuance
 	Retirements []*Retirement
-	RefData     []byte
+	Tags        []byte
 }
 
 // Value is a value triple (amount, assetID, and anchor) parsed from
@@ -232,7 +232,7 @@ func addRetireMeta(retirement *Retirement, tx *bc.Tx, logPos int) {
 }
 
 func addFinalizeMeta(res *Result, tx *bc.Tx, logPos int) {
-	// expect 1 log entry before the finalize entry. it contains the refdata
+	// expect 1 log entry before the finalize entry. it contains the txtags
 
 	if logPos < 1 {
 		return
@@ -242,11 +242,11 @@ func addFinalizeMeta(res *Result, tx *bc.Tx, logPos int) {
 	if !ok {
 		return
 	}
-	refdata, ok := tuple[2].(txvm.Bytes)
+	txTags, ok := tuple[2].(txvm.Bytes)
 	if !ok {
 		return
 	}
-	res.RefData = []byte(refdata)
+	res.Tags = []byte(txTags)
 }
 
 func logTuple(t txvm.Tuple, seed *[32]byte) (txvm.Tuple, bool) {
