@@ -65,9 +65,7 @@ func opCheckSig(vm *VM) {
 		checkEd25519(msg, pubkey, sig)
 	} else if !vm.extension {
 		panic(errors.Wrapf(ErrExt, "checksig cannot validate unknown signature scheme %s", scheme.String()))
-	} else {
-		// vm.extension==true allows accepting unknown schemes as valid
-	}
+	} // else vm.extension==true, so accept unknown schemes as valid
 	vm.pushBool(true)
 }
 

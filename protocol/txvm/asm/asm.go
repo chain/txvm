@@ -182,7 +182,7 @@ func (a *assembler) assembleValue() error {
 				if tok != tokComma {
 					return fmt.Errorf("expected ',' at offset %d, found %q", a.off, a.lit)
 				}
-				tok = a.next()
+				a.next()
 			}
 
 			count++
