@@ -111,7 +111,7 @@ func Validate(prog []byte, txVersion, runlimit int64, o ...Option) (*VM, error) 
 	}
 
 	for _, o := range o {
-		o(vm)
+		o.apply(vm)
 	}
 
 	err := vm.validate(prog)
