@@ -88,6 +88,8 @@ import (
 	"github.com/chain/txvm/protocol/state"
 )
 
+const defaultTxsPerSnapshot = uint64(25000)
+
 var (
 	// ErrTheDistantFuture is returned when waiting for a blockheight
 	// too far in excess of the tip of the blockchain.
@@ -129,8 +131,10 @@ type Chain struct {
 	}
 	store Store
 
-	lastQueuedSnapshotMS uint64
-	pendingSnapshots     chan *state.Snapshot
+	txsPerSnapshot        uint64
+	lastQueuedSnapshotTxs uint64
+	queuedSnapshotTxsMu   sync.Mutex
+	pendingSnapshots      chan *state.Snapshot
 }
 
 // NewChain returns a new Chain using store as the underlying storage.
@@ -139,6 +143,7 @@ func NewChain(ctx context.Context, initialBlock *bc.Block, store Store, heights 
 		InitialBlockHash: initialBlock.Hash(),
 		store:            store,
 		pendingSnapshots: make(chan *state.Snapshot, 1),
+		txsPerSnapshot:   defaultTxsPerSnapshot,
 	}
 	c.state.cond.L = new(sync.Mutex)
 	c.state.snapshot = state.Empty()

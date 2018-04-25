@@ -12,6 +12,7 @@ import (
 )
 
 func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
+	ctx := context.Background()
 	store := memstore.New()
 	b, err := NewInitialBlock(nil, 0, time.Now().Add(-time.Minute))
 	if err != nil {
@@ -21,14 +22,22 @@ func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	c1.txsPerSnapshot = 0
 	st := state.Empty()
 	err = st.ApplyBlock(b)
 	if err != nil {
 		testutil.FatalErr(t, err)
 	}
-	err = c1.CommitAppliedBlock(context.Background(), b, st)
+	err = c1.CommitAppliedBlock(ctx, b, st)
 	if err != nil {
 		testutil.FatalErr(t, err)
+	}
+
+	tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(0)})}
+	b1, _, err := c1.GenerateBlock(ctx, st, bc.Millis(time.Now()), []*bc.Tx{tx})
+	err = c1.CommitBlock(ctx, b1)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	// Snapshots are applied asynchronously. This loops waits
@@ -40,8 +49,6 @@ func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
-
 	c2, err := NewChain(context.Background(), b, store, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -50,13 +57,13 @@ func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if state.Height() != 1 {
-		t.Fatalf("state.Height = %d, want %d", state.Height(), 1)
+	if state.Height() != 2 {
+		t.Fatalf("state.Height = %d, want %d", state.Height(), 2)
 	}
 
 	curState := c2.State()
-	if curState.Height() != 1 {
-		t.Fatalf("chain.state.Height = %d, want %d", curState.Height(), 1)
+	if curState.Height() != 2 {
+		t.Fatalf("chain.state.Height = %d, want %d", curState.Height(), 2)
 	}
 	if curState.Header == nil {
 		t.Fatal("chain.state.Header is nil")

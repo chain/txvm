@@ -26,7 +26,9 @@ func (c *Chain) Recover(ctx context.Context) (*state.Snapshot, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "getting snapshot block")
 		}
-		c.lastQueuedSnapshotMS = snapshot.TimestampMS()
+		c.queuedSnapshotTxsMu.Lock()
+		c.lastQueuedSnapshotTxs = 0
+		c.queuedSnapshotTxsMu.Unlock()
 	}
 	if snapshot == nil {
 		snapshot = state.Empty()

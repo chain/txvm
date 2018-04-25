@@ -281,6 +281,68 @@ func TestCommitBlockIdempotence(t *testing.T) {
 	}
 }
 
+func TestPersistSnapshot(t *testing.T) {
+	ctx := context.Background()
+
+	now := time.Now()
+	c, b1 := newTestChain(t, now)
+	c.txsPerSnapshot = 50
+	numTxs := int(c.txsPerSnapshot + 1)
+
+	s := state.Empty()
+	s.ApplyBlock(b1)
+	appliedSnapshot := s
+
+	for i := 0; i < numTxs; i++ {
+		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
+		newBlock, snapshot, err := c.GenerateBlock(ctx, appliedSnapshot, bc.Millis(now)+uint64(i+1), []*bc.Tx{tx})
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = c.CommitBlock(ctx, newBlock)
+		if err != nil {
+			t.Fatal(err)
+		}
+		appliedSnapshot = snapshot
+	}
+	if c.getLastQueuedSnapshotTxs() != 0 {
+		t.Fatalf("expected to have 0 txs since last snapshot, got %d txs since last snapshot", c.getLastQueuedSnapshotTxs())
+	}
+
+	// Snapshots are applied asynchronously. This loops waits
+	// until the snapshot is created.
+	for {
+		snap, _ := c.store.LatestSnapshot(context.Background())
+		if snap.Height() > 0 {
+			break
+		}
+	}
+	latestSnapshot, err := c.store.LatestSnapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(latestSnapshot, appliedSnapshot) {
+		t.Fatalf("from memstore, got snapshot\n%swant snapshot:\n%s", spew.Sdump(latestSnapshot), spew.Sdump(appliedSnapshot))
+	}
+
+	numTxs = 10
+	for i := 0; i < numTxs; i++ {
+		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
+		newBlock, snapshot, err := c.GenerateBlock(ctx, appliedSnapshot, bc.Millis(now)+uint64(i+52), []*bc.Tx{tx})
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = c.CommitBlock(ctx, newBlock)
+		if err != nil {
+			t.Fatal(err)
+		}
+		appliedSnapshot = snapshot
+	}
+	if int(c.getLastQueuedSnapshotTxs()) != numTxs {
+		t.Fatalf("expected to have %d txs since last queued snapshots, got %d", numTxs, c.getLastQueuedSnapshotTxs())
+	}
+}
+
 // newTestChain returns a new Chain using memstore for storage,
 // along with an initial block b1 (with a 0/0 multisig program).
 // It commits b1 before returning.

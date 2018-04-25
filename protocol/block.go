@@ -104,6 +104,10 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 		b.Transactions = append(b.Transactions, tx)
 	}
 
+	c.queuedSnapshotTxsMu.Lock()
+	c.lastQueuedSnapshotTxs += uint64(len(txs))
+	c.queuedSnapshotTxsMu.Unlock()
+
 	txRoot := bc.TxMerkleRoot(b.Transactions)
 	b.TransactionsRoot = &txRoot
 
@@ -173,7 +177,7 @@ func (c *Chain) CommitBlock(ctx context.Context, block *bc.Block) error {
 func (c *Chain) finalizeCommitState(ctx context.Context, snapshot *state.Snapshot) error {
 	// Save the blockchain state tree snapshot to persistent storage
 	// if we haven't done it recently.
-	if snapshot.TimestampMS() > c.lastQueuedSnapshotMS+saveSnapshotFrequencyMS {
+	if c.getLastQueuedSnapshotTxs() > c.txsPerSnapshot {
 		c.queueSnapshot(ctx, snapshot)
 	}
 	// setState will update c's current block and snapshot, or no-op
@@ -192,12 +196,20 @@ func (c *Chain) queueSnapshot(ctx context.Context, s *state.Snapshot) {
 	// Non-blockingly queue the snapshot for storage.
 	select {
 	case c.pendingSnapshots <- s:
-		c.lastQueuedSnapshotMS = s.TimestampMS()
+		c.queuedSnapshotTxsMu.Lock()
+		c.lastQueuedSnapshotTxs = 0
+		c.queuedSnapshotTxsMu.Unlock()
 	default:
 		// Skip it; saving snapshots is taking longer than the snapshotting period.
-		log.Printf(ctx, "snapshot storage is taking too long; last queued at %s",
-			bc.FromMillis(c.lastQueuedSnapshotMS))
+		log.Printf(ctx, "snapshot storage is taking too long; %d transactions since last snapshot queued",
+			c.getLastQueuedSnapshotTxs())
 	}
+}
+
+func (c *Chain) getLastQueuedSnapshotTxs() uint64 {
+	c.queuedSnapshotTxsMu.Lock()
+	defer c.queuedSnapshotTxsMu.Unlock()
+	return c.lastQueuedSnapshotTxs
 }
 
 // NewInitialBlock produces the first block for a new blockchain,
