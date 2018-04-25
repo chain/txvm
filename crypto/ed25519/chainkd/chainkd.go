@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/binary"
-	"hash"
 	"io"
 
 	"github.com/chain/txvm/crypto/ed25519"
@@ -200,26 +199,27 @@ func (xpub XPub) PublicKey() ed25519.PublicKey {
 }
 
 func hashKeySaltSelector(out []byte, version byte, key, salt, sel []byte) {
-	hasher := hashKeySaltHelper(version, key, salt)
 	var l [10]byte
 	n := binary.PutUvarint(l[:], uint64(len(sel)))
-	hasher.Write(l[:n])
-	hasher.Write(sel)
-	hasher.Sum(out[:0])
+
+	data := make([]byte, 0, 1+len(key)+len(salt)+n+len(sel))
+	data = append(data, version)
+	data = append(data, key...)
+	data = append(data, salt...)
+	data = append(data, l[:n]...)
+	data = append(data, sel...)
+	h := sha512.Sum512(data)
+	copy(out, h[:])
 	modifyScalar(out)
 }
 
 func hashKeySalt(out []byte, version byte, key, salt []byte) {
-	hasher := hashKeySaltHelper(version, key, salt)
-	hasher.Sum(out[:0])
-}
-
-func hashKeySaltHelper(version byte, key, salt []byte) hash.Hash {
-	hasher := sha512.New()
-	hasher.Write([]byte{version})
-	hasher.Write(key)
-	hasher.Write(salt)
-	return hasher
+	data := make([]byte, 0, 1+len(key)+len(salt))
+	data = append(data, version)
+	data = append(data, key...)
+	data = append(data, salt...)
+	h := sha512.Sum512(data)
+	copy(out, h[:])
 }
 
 // s must be >= 32 bytes long and gets rewritten in place
