@@ -70,68 +70,6 @@ func TestNoTimeTravel(t *testing.T) {
 	}
 }
 
-func TestWaitForBlockSoonAlreadyExists(t *testing.T) {
-	c, _ := newTestChain(t, time.Now())
-	makeEmptyBlock(t, c) // height=2
-	makeEmptyBlock(t, c) // height=3
-
-	err := <-c.BlockSoonWaiter(context.Background(), 2)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestWaitForBlockSoonDistantFuture(t *testing.T) {
-	c, _ := newTestChain(t, time.Now())
-
-	got := <-c.BlockSoonWaiter(context.Background(), 100) // distant future
-	want := ErrTheDistantFuture
-	if got != want {
-		t.Errorf("BlockSoonWaiter(100) = %+v want %+v", got, want)
-	}
-}
-
-func TestWaitForBlockSoonWaits(t *testing.T) {
-	// This test is inherently racy. It's possible
-	// that the block creation might run before
-	// the wait's internal test loop finds no block.
-	// In that case, the test will pass, but it will
-	// not have tested anything.
-	//
-	// It's the best we can do.
-
-	c, _ := newTestChain(t, time.Now())
-	makeEmptyBlock(t, c) // height=2
-
-	go func() {
-		time.Sleep(10 * time.Millisecond) // sorry for the slow test 
-		makeEmptyBlock(t, c)              // height=3
-	}()
-
-	err := <-c.BlockSoonWaiter(context.Background(), 3)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if g := c.Height(); g != 3 {
-		t.Errorf("height after waiting = %d want 3", g)
-	}
-}
-
-func TestWaitForBlockSoonTimesout(t *testing.T) {
-	c, _ := newTestChain(t, time.Now())
-	go func() {
-		makeEmptyBlock(t, c) // height=2
-	}()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Millisecond)
-	defer cancel()
-
-	err := <-c.BlockSoonWaiter(ctx, 3)
-	if err != ctx.Err() {
-		t.Fatalf("expected timeout err, got %v", err)
-	}
-}
-
 func TestGenerateBlock(t *testing.T) {
 	ctx := context.Background()
 	now := time.Unix(233400000, 0)

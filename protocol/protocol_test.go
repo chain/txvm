@@ -23,10 +23,9 @@ func TestNewChainHeight(t *testing.T) {
 	heights <- 0
 	heights <- 3
 
-	err = <-c.BlockSoonWaiter(ctx, 3)
-	if err != nil {
-		t.Fatal(err)
+	<-c.BlockWaiter(3)
+	if got := c.Height(); got != 3 {
+		t.Errorf("c.Height() = %d, want %d", got, 3)
 	}
-
 	cancel()
 }

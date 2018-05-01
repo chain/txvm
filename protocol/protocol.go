@@ -90,12 +90,6 @@ import (
 
 const defaultTxsPerSnapshot = uint64(25000)
 
-var (
-	// ErrTheDistantFuture is returned when waiting for a blockheight
-	// too far in excess of the tip of the blockchain.
-	ErrTheDistantFuture = errors.New("block height too far in future")
-)
-
 // Store provides storage for blockchain data: blocks and state tree
 // snapshots.
 //
@@ -232,32 +226,6 @@ func (c *Chain) setHeight(h uint64) {
 	}
 	c.state.height = h
 	c.state.cond.Broadcast()
-}
-
-// BlockSoonWaiter returns a channel that
-// waits for the block at the given height,
-// but it is an error to wait for a block far in the future.
-// WaitForBlockSoon will timeout if the context times out.
-// To wait unconditionally, the caller should use WaitForBlock.
-func (c *Chain) BlockSoonWaiter(ctx context.Context, height uint64) <-chan error {
-	ch := make(chan error, 1)
-
-	go func() {
-		const slop = 3
-		if height > c.Height()+slop {
-			ch <- ErrTheDistantFuture
-			return
-		}
-
-		select {
-		case <-c.BlockWaiter(height):
-			ch <- nil
-		case <-ctx.Done():
-			ch <- ctx.Err()
-		}
-	}()
-
-	return ch
 }
 
 // BlockWaiter returns a channel that
