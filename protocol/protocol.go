@@ -88,7 +88,7 @@ import (
 	"github.com/chain/txvm/protocol/state"
 )
 
-const defaultTxsPerSnapshot = uint64(25000)
+const defaultBlocksPerSnapshot = uint64(100)
 
 // Store provides storage for blockchain data: blocks and state tree
 // snapshots.
@@ -125,19 +125,18 @@ type Chain struct {
 	}
 	store Store
 
-	txsPerSnapshot        uint64
-	lastQueuedSnapshotTxs uint64
-	queuedSnapshotTxsMu   sync.Mutex
-	pendingSnapshots      chan *state.Snapshot
+	lastQueuedSnapshotHeight uint64 // atomic access only
+	blocksPerSnapshot        uint64
+	pendingSnapshots         chan *state.Snapshot
 }
 
 // NewChain returns a new Chain using store as the underlying storage.
 func NewChain(ctx context.Context, initialBlock *bc.Block, store Store, heights <-chan uint64) (*Chain, error) {
 	c := &Chain{
-		InitialBlockHash: initialBlock.Hash(),
-		store:            store,
-		pendingSnapshots: make(chan *state.Snapshot, 1),
-		txsPerSnapshot:   defaultTxsPerSnapshot,
+		InitialBlockHash:  initialBlock.Hash(),
+		store:             store,
+		pendingSnapshots:  make(chan *state.Snapshot, 1),
+		blocksPerSnapshot: defaultBlocksPerSnapshot,
 	}
 	c.state.cond.L = new(sync.Mutex)
 	c.state.snapshot = state.Empty()

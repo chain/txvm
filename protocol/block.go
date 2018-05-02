@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/chain/txvm/crypto/ed25519"
@@ -104,10 +105,6 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 		b.Transactions = append(b.Transactions, tx)
 	}
 
-	c.queuedSnapshotTxsMu.Lock()
-	c.lastQueuedSnapshotTxs += uint64(len(txs))
-	c.queuedSnapshotTxsMu.Unlock()
-
 	txRoot := bc.TxMerkleRoot(b.Transactions)
 	b.TransactionsRoot = &txRoot
 
@@ -177,7 +174,8 @@ func (c *Chain) CommitBlock(ctx context.Context, block *bc.Block) error {
 func (c *Chain) finalizeCommitState(ctx context.Context, snapshot *state.Snapshot) error {
 	// Save the blockchain state tree snapshot to persistent storage
 	// if we haven't done it recently.
-	if c.getLastQueuedSnapshotTxs() > c.txsPerSnapshot {
+	lastQueuedHeight := atomic.LoadUint64(&c.lastQueuedSnapshotHeight)
+	if lastQueuedHeight+c.blocksPerSnapshot <= snapshot.Height() {
 		c.queueSnapshot(ctx, snapshot)
 	}
 	// setState will update c's current block and snapshot, or no-op
@@ -196,20 +194,13 @@ func (c *Chain) queueSnapshot(ctx context.Context, s *state.Snapshot) {
 	// Non-blockingly queue the snapshot for storage.
 	select {
 	case c.pendingSnapshots <- s:
-		c.queuedSnapshotTxsMu.Lock()
-		c.lastQueuedSnapshotTxs = 0
-		c.queuedSnapshotTxsMu.Unlock()
+		atomic.StoreUint64(&c.lastQueuedSnapshotHeight, s.Height())
 	default:
 		// Skip it; saving snapshots is taking longer than the snapshotting period.
-		log.Printf(ctx, "snapshot storage is taking too long; %d transactions since last snapshot queued",
-			c.getLastQueuedSnapshotTxs())
+		lastQueuedHeight := atomic.LoadUint64(&c.lastQueuedSnapshotHeight)
+		log.Printf(ctx, "snapshot storage is taking too long; %d blocks since last snapshot queued",
+			s.Height()-lastQueuedHeight)
 	}
-}
-
-func (c *Chain) getLastQueuedSnapshotTxs() uint64 {
-	c.queuedSnapshotTxsMu.Lock()
-	defer c.queuedSnapshotTxsMu.Unlock()
-	return c.lastQueuedSnapshotTxs
 }
 
 // NewInitialBlock produces the first block for a new blockchain,

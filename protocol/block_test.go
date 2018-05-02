@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -224,14 +225,14 @@ func TestPersistSnapshot(t *testing.T) {
 
 	now := time.Now()
 	c, b1 := newTestChain(t, now)
-	c.txsPerSnapshot = 50
-	numTxs := int(c.txsPerSnapshot + 1)
+	c.blocksPerSnapshot = 50
+	numBlocks := int(c.blocksPerSnapshot) - 1 // minus initial block
 
 	s := state.Empty()
 	s.ApplyBlock(b1)
 	appliedSnapshot := s
 
-	for i := 0; i < numTxs; i++ {
+	for i := 0; i < numBlocks; i++ {
 		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
 		newBlock, snapshot, err := c.GenerateBlock(ctx, appliedSnapshot, bc.Millis(now)+uint64(i+1), []*bc.Tx{tx})
 		if err != nil {
@@ -243,8 +244,9 @@ func TestPersistSnapshot(t *testing.T) {
 		}
 		appliedSnapshot = snapshot
 	}
-	if c.getLastQueuedSnapshotTxs() != 0 {
-		t.Fatalf("expected to have 0 txs since last snapshot, got %d txs since last snapshot", c.getLastQueuedSnapshotTxs())
+	lastQueuedHeight := atomic.LoadUint64(&c.lastQueuedSnapshotHeight)
+	if lastQueuedHeight != c.Height() {
+		t.Fatalf("expected to create snapshot at height %d", c.Height())
 	}
 
 	// Snapshots are applied asynchronously. This loops waits
@@ -261,23 +263,6 @@ func TestPersistSnapshot(t *testing.T) {
 	}
 	if !reflect.DeepEqual(latestSnapshot, appliedSnapshot) {
 		t.Fatalf("from memstore, got snapshot\n%swant snapshot:\n%s", spew.Sdump(latestSnapshot), spew.Sdump(appliedSnapshot))
-	}
-
-	numTxs = 10
-	for i := 0; i < numTxs; i++ {
-		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
-		newBlock, snapshot, err := c.GenerateBlock(ctx, appliedSnapshot, bc.Millis(now)+uint64(i+52), []*bc.Tx{tx})
-		if err != nil {
-			t.Fatal(err)
-		}
-		err = c.CommitBlock(ctx, newBlock)
-		if err != nil {
-			t.Fatal(err)
-		}
-		appliedSnapshot = snapshot
-	}
-	if int(c.getLastQueuedSnapshotTxs()) != numTxs {
-		t.Fatalf("expected to have %d txs since last queued snapshots, got %d", numTxs, c.getLastQueuedSnapshotTxs())
 	}
 }
 

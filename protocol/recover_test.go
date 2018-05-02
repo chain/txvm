@@ -22,7 +22,7 @@ func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c1.txsPerSnapshot = 0
+	c1.blocksPerSnapshot = 0
 	st := state.Empty()
 	err = st.ApplyBlock(b)
 	if err != nil {

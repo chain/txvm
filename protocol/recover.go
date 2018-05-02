@@ -3,6 +3,7 @@ package protocol
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/protocol/bc"
@@ -26,9 +27,7 @@ func (c *Chain) Recover(ctx context.Context) (*state.Snapshot, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "getting snapshot block")
 		}
-		c.queuedSnapshotTxsMu.Lock()
-		c.lastQueuedSnapshotTxs = 0
-		c.queuedSnapshotTxsMu.Unlock()
+		atomic.StoreUint64(&c.lastQueuedSnapshotHeight, b.Height)
 	}
 	if snapshot == nil {
 		snapshot = state.Empty()
