@@ -260,9 +260,10 @@ func must(err error) {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "  block validate [-prev PREVHEX] [-nosig] [-noprev] <BLOCK\n")
-	fmt.Fprintf(os.Stderr, "  block header [-pretty] <BLOCKHEADER\n")
-	fmt.Fprintf(os.Stderr, "  block tx [-raw] [-pretty] INDEX <BLOCK\n")
+	fmt.Fprintln(os.Stderr, "Usage:")
+	fmt.Fprintln(os.Stderr, "  block validate [-prev PREVHEX] [-nosig] [-noprev] <BLOCK")
+	fmt.Fprintln(os.Stderr, "  block header [-pretty] <BLOCKHEADER")
+	fmt.Fprintln(os.Stderr, "  block tx [-raw] [-pretty] INDEX <BLOCK")
+	fmt.Fprintln(os.Stderr, "  block new [-quorum QUORUM] [-time TIME] PUBKEYHEX PUBKEYHEX ... >BLOCK")
 	os.Exit(1)
 }
