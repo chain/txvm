@@ -146,30 +146,38 @@ func TestBlockOnly(t *testing.T) {
 		wantErr error
 	}{{
 		tx: &bc.Tx{
-			ID:       bc.NewHash([32]byte{1}),
-			Version:  3,
-			Runlimit: 2000,
+			RawTx: bc.RawTx{
+				Version:  3,
+				Runlimit: 2000,
+			},
+			ID: bc.NewHash([32]byte{1}),
 		},
 		wantErr: nil,
 	}, {
 		tx: &bc.Tx{
-			ID:       bc.NewHash([32]byte{1}),
-			Version:  2,
-			Runlimit: 2000,
+			RawTx: bc.RawTx{
+				Version:  2,
+				Runlimit: 2000,
+			},
+			ID: bc.NewHash([32]byte{1}),
 		},
 		wantErr: errTxVersion,
 	}, {
 		tx: &bc.Tx{
-			ID:       bc.NewHash([32]byte{1}),
-			Version:  3,
-			Runlimit: 5001,
+			RawTx: bc.RawTx{
+				Version:  3,
+				Runlimit: 5001,
+			},
+			ID: bc.NewHash([32]byte{1}),
 		},
 		wantErr: errRunlimit,
 	}, {
 		tx: &bc.Tx{
-			ID:       bc.NewHash([32]byte{2}),
-			Version:  3,
-			Runlimit: 2000,
+			RawTx: bc.RawTx{
+				Version:  3,
+				Runlimit: 2000,
+			},
+			ID: bc.NewHash([32]byte{2}),
 		},
 		wantErr: errMismatchedMerkleRoot,
 	}}

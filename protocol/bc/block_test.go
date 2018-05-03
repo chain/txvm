@@ -88,7 +88,7 @@ func TestBlockBytes(t *testing.T) {
 		t.Error("expected error for bad block bytes")
 	}
 
-	badTx := &Tx{Version: 3, Runlimit: 10000, WitnessProg: []byte("badprog")}
+	badTx := &Tx{RawTx: RawTx{Version: 3, Runlimit: 10000, Program: []byte("badprog")}}
 	block.Transactions = append(block.Transactions, badTx)
 	badTxBlock, err := block.Bytes()
 	if err != nil {

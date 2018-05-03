@@ -11,9 +11,7 @@ import (
 // Tx contains the input to an instance of the txvm virtual machine,
 // plus parsed copies of its various side effects.
 type Tx struct {
-	WitnessProg []byte
-	Version     int64
-	Runlimit    int64
+	RawTx
 
 	Finalized bool
 	ID        Hash
@@ -97,9 +95,11 @@ type Retirement struct {
 // virtual machine, populating a new Tx object with its side effects.
 func NewTx(prog []byte, version, runlimit int64, option ...txvm.Option) (*Tx, error) {
 	tx := &Tx{
-		WitnessProg: prog,
-		Version:     version,
-		Runlimit:    runlimit,
+		RawTx: RawTx{
+			Program:  prog,
+			Version:  version,
+			Runlimit: runlimit,
+		},
 	}
 	option = append(option, txvm.OnFinalize(tx.entryHook), txvm.BeforeStep(tx.stackHook))
 	vm, err := txvm.Validate(prog, version, runlimit, option...)
@@ -235,7 +235,7 @@ func (tx *Tx) writeWitnessHashTo(w io.Writer) (int, error) {
 	h := txvm.VMHash("WitnessHash", txvm.Encode(txvm.Tuple{
 		txvm.Int(tx.Version),
 		txvm.Int(tx.Runlimit),
-		txvm.Bytes(tx.WitnessProg),
+		txvm.Bytes(tx.Program),
 	}))
 	return w.Write(h[:])
 }

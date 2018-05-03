@@ -25,10 +25,12 @@ func TestNewTx(t *testing.T) {
 			name: "simple payment",
 			asm:  txvmtest.SimplePayment,
 			want: &Tx{
+				RawTx: RawTx{
+					Version:  3,
+					Runlimit: 100000,
+				},
 				Finalized: true,
 				ID:        mustDecodeHash("c10da3fb9bed06674f9e247c5fff60c712c7d47881f3843a0c75d91544ed76b8"),
-				Version:   3,
-				Runlimit:  100000,
 				Contracts: []Contract{
 					{InputType, mustDecodeHash("7229e653bd7c21efae174d7d3e8087ea8e5e1d074adc59a1dfbd88c484ead9ea")},
 					{OutputType, mustDecodeHash("333b102f5eebf7450cced735b1a2518f98f706b52828197d6bd70229e2e669f5")},
@@ -70,10 +72,12 @@ func TestNewTx(t *testing.T) {
 			name: "issuance",
 			asm:  txvmtest.Issuance,
 			want: &Tx{
+				RawTx: RawTx{
+					Version:  3,
+					Runlimit: 100000,
+				},
 				Finalized: true,
 				ID:        mustDecodeHash("58bf0fea4ed326388836edfc1db8b24c35c4d804b962faa2890e4a0c5a0fda7a"),
-				Version:   3,
-				Runlimit:  100000,
 				Contracts: []Contract{{OutputType, mustDecodeHash("2bc2a72073906c6745123d2a1c46c0623a2e3bf85c955abbdf1f14799985ee7a")}},
 				Anchor:    mustDecodeHex("b820b13d533796a72bc4df57103cb5f85ed5d54eefd9858b7c919da47b4ba202"),
 				Nonces: []Nonce{
@@ -113,10 +117,12 @@ func TestNewTx(t *testing.T) {
 			name: "retirement",
 			asm:  txvmtest.Retirement,
 			want: &Tx{
+				RawTx: RawTx{
+					Version:  3,
+					Runlimit: 100000,
+				},
 				Finalized: true,
 				ID:        mustDecodeHash("a42adebd554ef71ba557837f7318d2854f45993431c481dbefe9fa032dc0a3a5"),
-				Version:   3,
-				Runlimit:  100000,
 				Contracts: []Contract{{InputType, mustDecodeHash("7fa08e4c10e99141e90cf0c43602c6f2647ce6397f435d31f8540f0f4f5e5f3c")}},
 				Anchor:    mustDecodeHex("a4eb3b92e93f5889d7dd213530ee968c4f602ca45b3fc34d0936417d6daa59b0"),
 				Inputs: []Input{{
@@ -162,7 +168,7 @@ func TestNewTx(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			c.want.WitnessProg = prog
+			c.want.Program = prog
 
 			tx, err := NewTx(prog, 3, 100000)
 			if err != nil {

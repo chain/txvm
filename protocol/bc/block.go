@@ -111,7 +111,7 @@ func (b *Block) Bytes() ([]byte, error) {
 		txs = append(txs, &RawTx{
 			Version:  tx.Version,
 			Runlimit: tx.Runlimit,
-			Program:  tx.WitnessProg,
+			Program:  tx.Program,
 		})
 	}
 	var args []*DataItem

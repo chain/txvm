@@ -85,7 +85,7 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 		// Filter out transactions that conflict with the block timestamp.
 		err := c.checkTransactionTime(tx, timestampMS)
 		if err != nil {
-			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.WitnessProg))
+			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.Program))
 			continue
 		}
 
@@ -97,7 +97,7 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 		// Filter out double-spends etc.
 		err = newSnapshot.ApplyTx(tx)
 		if err != nil {
-			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.WitnessProg))
+			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.Program))
 			continue
 		}
 
