@@ -19,6 +19,7 @@ import (
 )
 
 var modes = map[string]func([]string){
+	"hash":     hash,
 	"header":   header,
 	"new":      newBlock,
 	"tx":       tx,
@@ -150,6 +151,26 @@ func validate(args []string) {
 	os.Exit(1)
 }
 
+func hash(_ []string) {
+	inp, err := ioutil.ReadAll(os.Stdin)
+	must(err)
+
+	var (
+		bh *bc.BlockHeader
+		rb bc.RawBlock
+	)
+	err = proto.Unmarshal(inp, &rb)
+	if err != nil {
+		bh = new(bc.BlockHeader)
+		err = proto.Unmarshal(inp, bh)
+		must(err)
+	} else {
+		bh = rb.Header
+	}
+	h := bh.Hash()
+	os.Stdout.Write(h.Bytes())
+}
+
 func header(args []string) {
 	fs := flag.NewFlagSet("header", flag.PanicOnError)
 	pretty := fs.Bool("pretty", false, "show individual blockheader fields")
@@ -262,7 +283,8 @@ func must(err error) {
 func usage() {
 	fmt.Fprintln(os.Stderr, "Usage:")
 	fmt.Fprintln(os.Stderr, "  block validate [-prev PREVHEX] [-nosig] [-noprev] <BLOCK")
-	fmt.Fprintln(os.Stderr, "  block header [-pretty] <BLOCKHEADER")
+	fmt.Fprintln(os.Stderr, "  block hash <BLOCK_OR_HEADER")
+	fmt.Fprintln(os.Stderr, "  block header [-pretty] <BLOCK")
 	fmt.Fprintln(os.Stderr, "  block tx [-raw] [-pretty] INDEX <BLOCK")
 	fmt.Fprintln(os.Stderr, "  block new [-quorum QUORUM] [-time TIME] PUBKEYHEX PUBKEYHEX ... >BLOCK")
 	os.Exit(1)

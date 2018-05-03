@@ -10,6 +10,8 @@ Usage:
 	block validate [-prev PREVHEX] [-noprev] [-nosig] <BLOCK
 	block new [-quorum QUORUM] [-time TIME] PUBKEYHEX PUBKEYHEX ... >BLOCK
 
+	block hash <BLOCK_OR_HEADER
+
 The tx subcommand causes block to extract and output the transaction
 with the given index (zero-based). The default output contains only
 the bytes of the transaction's program. With -raw the output is the
@@ -38,6 +40,10 @@ current time unless -time appears, in which case TIME must be a time
 in RFC3339 format, e.g.:
 
 	2006-01-02T15:04:05Z07:00
+
+The hash subcommand accepts a block or a block header as input (such
+as is produced by the output of the header subcommand). The output is
+the hash of the block header that also serves as the ID of the block.
 
 */
 package main
