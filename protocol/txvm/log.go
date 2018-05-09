@@ -37,7 +37,7 @@ func (vm *VM) logNonce(blockID []byte, exp int64) Tuple {
 }
 
 func (vm *VM) logTimeRange(mintime, maxtime Int) {
-	vm.log(Bytes{TimerangeCode}, Bytes(vm.contract.seed), Int(mintime), Int(maxtime))
+	vm.log(Bytes{TimerangeCode}, Bytes(vm.contract.seed), mintime, maxtime)
 }
 
 func (vm *VM) logOutput(snapshotID []byte) {

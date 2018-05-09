@@ -297,20 +297,6 @@ func newTestChain(tb testing.TB, ts time.Time) (c *Chain, b1 *bc.Block) {
 	return c, b1
 }
 
-func makeEmptyBlock(tb testing.TB, c *Chain) {
-	ctx := context.Background()
-
-	curState := c.State()
-	nextBlock, nextState, err := c.GenerateBlock(ctx, curState, curState.TimestampMS()+1, nil)
-	if err != nil {
-		testutil.FatalErr(tb, err)
-	}
-	err = c.CommitAppliedBlock(ctx, nextBlock, nextState)
-	if err != nil {
-		testutil.FatalErr(tb, err)
-	}
-}
-
 func mustDecodeHash(s string) (h bc.Hash) {
 	err := h.UnmarshalText([]byte(s))
 	if err != nil {

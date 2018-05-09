@@ -20,10 +20,6 @@ import (
 // included in each block.
 const maxBlockTxs = 10000
 
-// saveSnapshotFrequency stores how often to save a state
-// snapshot to the Store.
-var saveSnapshotFrequencyMS = bc.DurationMillis(time.Hour)
-
 var (
 	// ErrBadContractsRoot is returned when the computed contracts merkle root
 	// disagrees with the one declared in a block header.

@@ -9,7 +9,7 @@ import (
 	"math"
 )
 
-// ErrOverflow is an artihmetic-overflow error.
+// ErrOverflow is an arithmetic-overflow error.
 var ErrOverflow = errors.New("arithmetic overflow")
 
 // AddInt64 returns a + b

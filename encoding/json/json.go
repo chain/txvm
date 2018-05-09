@@ -38,7 +38,7 @@ func (m Map) MarshalJSON() ([]byte, error) {
 	return m, nil
 }
 
-// UnmarshalJSON satsifies the json.Unmarshaler interface.
+// UnmarshalJSON satisfies the json.Unmarshaler interface.
 func (m *Map) UnmarshalJSON(text []byte) error {
 	// UnmarshalJSON takes only valid json, we can take advantage of this
 	// to see if the first character is either '{' for an object or 'n'

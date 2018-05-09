@@ -237,7 +237,7 @@ func (s *scanner) scan() (pos int, tok token, lit string) {
 				tok = tokIdent
 				lit = s.scanIdentifier(pos)
 
-				// handle symbolic jumps as separete tokens
+				// handle symbolic jumps as separate tokens
 				// from the `jump` and `jumpif` ops
 				switch {
 				case lit == "jump" && s.ch == ':':
