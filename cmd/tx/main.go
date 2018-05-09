@@ -11,8 +11,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/chain/txvm/standard/txresult"
 	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/txbuilder/txresult"
 	"github.com/chain/txvm/protocol/txvm"
 	"github.com/chain/txvm/protocol/txvm/asm"
 )

@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"sync"
 
-	"github.com/chain/txvm/core/txbuilder/standard"
 	"github.com/chain/txvm/crypto/ed25519"
 	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/txbuilder/standard"
 	"github.com/chain/txvm/protocol/txvm"
 )
 
 // Result is a container for information that can be parsed from the
 // transaction log of a completed txvm program. Extra log annotations
-// produced by the txvm programs in core/txbuilder/standard are
+// produced by the txvm programs in protocol/txbuilder/standard are
 // understood here.
 type Result struct {
 	Tx          *bc.Tx

@@ -7,8 +7,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/chain/txvm/standard"
 	"github.com/chain/txvm/crypto/ed25519"
+	"github.com/chain/txvm/protocol/txbuilder/standard"
 )
 
 func main() {
