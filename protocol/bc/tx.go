@@ -103,9 +103,11 @@ func NewTx(prog []byte, version, runlimit int64, option ...txvm.Option) (*Tx, er
 	}
 	option = append(option, txvm.OnFinalize(tx.entryHook), txvm.BeforeStep(tx.stackHook))
 	vm, err := txvm.Validate(prog, version, runlimit, option...)
-	tx.Finalized = vm.Finalized
-	if vm.Finalized {
-		tx.ID = NewHash(vm.TxID)
+	if vm != nil {
+		tx.Finalized = vm.Finalized
+		if vm.Finalized {
+			tx.ID = NewHash(vm.TxID)
+		}
 	}
 	return tx, errors.Wrap(err)
 }
