@@ -340,7 +340,7 @@ func TestWriteRawStack(t *testing.T) {
 		w string
 	}{
 		{[]byte("foo\nbar"), "foo\nbar\n"},
-		{runtime.CallersFrames(pc[:2]), ": chain/log.TestWriteRawStack\n"},
+		{runtime.CallersFrames(pc[:2]), "/log.TestWriteRawStack\n"},
 		{1, ""}, // int is not a valid stack val
 	}
 
