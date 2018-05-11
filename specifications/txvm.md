@@ -1493,7 +1493,7 @@ _value_ **amount** → _value amount_
 
 #### assetid
 
-_value_ **ac** → _asset ID_
+_value_ **assetid** → _value assetID_
 
 1. Looks at [value](#values) `v` at the top of the contract stack.
 2. [Copies](#copy-cost) `v.assetid` as string `assetid`.
