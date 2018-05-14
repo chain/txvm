@@ -86,7 +86,7 @@ func (s *Snapshot) ApplyBlock(block *bc.Block) error {
 	}
 
 	for i, tx := range block.Transactions {
-		err = s.ApplyTx(tx)
+		err = s.ApplyTx(bc.NewCommitmentsTx(tx))
 		if err != nil {
 			return errors.Wrapf(err, "applying block transaction %d", i)
 		}
@@ -116,7 +116,7 @@ func (s *Snapshot) ApplyBlockHeader(bh *bc.BlockHeader) error {
 }
 
 // ApplyTx updates s in place.
-func (s *Snapshot) ApplyTx(tx *bc.Tx) error {
+func (s *Snapshot) ApplyTx(p *bc.CommitmentsTx) error {
 	if s.InitialBlockID.IsZero() {
 		return fmt.Errorf("cannot apply a transaction to an empty state")
 	}
@@ -124,10 +124,10 @@ func (s *Snapshot) ApplyTx(tx *bc.Tx) error {
 	nonceTree := new(patricia.Tree)
 	*nonceTree = *s.NonceTree
 
-	for _, n := range tx.Nonces {
+	for _, n := range p.Tx.Nonces {
 		// Add new nonces. They must not conflict with nonces already
 		// present.
-		nc := NonceCommitment(n.ID, n.ExpMS)
+		nc, _ := p.NonceCommitments[n.ID]
 		if nonceTree.Contains(nc) {
 			return fmt.Errorf("conflicting nonce %x", n.ID.Bytes())
 		}
@@ -153,7 +153,7 @@ func (s *Snapshot) ApplyTx(tx *bc.Tx) error {
 	*conTree = *s.ContractsTree
 
 	// Add or remove contracts, depending on if it is an input or output
-	for _, con := range tx.Contracts {
+	for _, con := range p.Tx.Contracts {
 		switch con.Type {
 		case bc.InputType:
 			if !conTree.Contains(con.ID.Bytes()) {
@@ -189,15 +189,6 @@ func (s *Snapshot) TimestampMS() uint64 {
 		return 0
 	}
 	return s.Header.TimestampMs
-}
-
-// NonceCommitment returns the byte commitment
-// for the given nonce id and expiration.
-func NonceCommitment(id bc.Hash, expms uint64) []byte {
-	b := make([]byte, 40)
-	copy(b[:32], id.Bytes())
-	binary.LittleEndian.PutUint64(b[32:], expms)
-	return b
 }
 
 func idTime(b []byte) (bc.Hash, uint64) {

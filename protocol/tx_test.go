@@ -18,7 +18,7 @@ func TestBadMaxNonceWindow(t *testing.T) {
 	}
 
 	st := c.State()
-	got, _, err := c.GenerateBlock(ctx, st, b1.TimestampMs+1, []*bc.Tx{tx})
+	got, _, err := c.GenerateBlock(ctx, st, b1.TimestampMs+1, []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +27,7 @@ func TestBadMaxNonceWindow(t *testing.T) {
 	}
 
 	c.MaxNonceWindow = 0
-	got, _, err = c.GenerateBlock(ctx, st, b1.TimestampMs+1, []*bc.Tx{tx})
+	got, _, err = c.GenerateBlock(ctx, st, b1.TimestampMs+1, []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 	if err != nil {
 		t.Fatal(err)
 	}

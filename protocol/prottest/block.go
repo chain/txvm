@@ -146,7 +146,11 @@ func MakeBlock(tb testing.TB, c *protocol.Chain, txs []*bc.Tx) *bc.Block {
 	if now <= curState.TimestampMS() {
 		now = curState.TimestampMS() + 1
 	}
-	nextBlock, nextState, err := c.GenerateBlock(ctx, curState, now, txs)
+	var commitmentsTxs []*bc.CommitmentsTx
+	for _, tx := range txs {
+		commitmentsTxs = append(commitmentsTxs, bc.NewCommitmentsTx(tx))
+	}
+	nextBlock, nextState, err := c.GenerateBlock(ctx, curState, now, commitmentsTxs)
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}

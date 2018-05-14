@@ -42,7 +42,7 @@ func (c *Chain) GetBlock(ctx context.Context, height uint64) (*bc.Block, error) 
 //
 // After generating the block, the pending transaction pool will be
 // empty.
-func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, timestampMS uint64, txs []*bc.Tx) (*bc.Block, *state.Snapshot, error) {
+func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, timestampMS uint64, txs []*bc.CommitmentsTx) (*bc.Block, *state.Snapshot, error) {
 	// TODO(kr): move this into a lower-level package (e.g. chain/protocol/bc)
 	// so that other packages (e.g. chain/protocol/validation) unit tests can
 	// call this function.
@@ -73,10 +73,14 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 		},
 	}
 
-	for _, tx := range txs {
+	var witnessCommitments [][]byte
+
+	for _, commitmentsTx := range txs {
 		if len(b.Transactions) >= maxBlockTxs {
 			break
 		}
+
+		tx := commitmentsTx.Tx
 
 		// Filter out transactions that conflict with the block timestamp.
 		err := c.checkTransactionTime(tx, timestampMS)
@@ -91,7 +95,7 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 		}
 
 		// Filter out double-spends etc.
-		err = newSnapshot.ApplyTx(tx)
+		err = newSnapshot.ApplyTx(commitmentsTx)
 		if err != nil {
 			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.Program))
 			continue
@@ -99,6 +103,7 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 
 		b.Runlimit = runlimit
 		b.Transactions = append(b.Transactions, tx)
+		witnessCommitments = append(witnessCommitments, commitmentsTx.WitnessCommitment)
 	}
 
 	txRoot := bc.TxMerkleRoot(b.Transactions)

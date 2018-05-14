@@ -132,3 +132,12 @@ func (h *Hash) IsZero() bool {
 	}
 	return *h == Hash{}
 }
+
+// NonceCommitment returns the byte commitment
+// for the given nonce id and expiration.
+func NonceCommitment(id Hash, expms uint64) []byte {
+	b := make([]byte, 40)
+	copy(b[:32], id.Bytes())
+	binary.LittleEndian.PutUint64(b[32:], expms)
+	return b
+}

@@ -1,6 +1,7 @@
 package bc
 
 import (
+	"bytes"
 	"io"
 
 	"github.com/chain/txvm/errors"
@@ -27,6 +28,13 @@ type Tx struct {
 	Issuances   []Issuance
 	Outputs     []Output
 	Retirements []Retirement
+}
+
+// CommitmentsTx wraps a Tx with its nonce and witness commitments.
+type CommitmentsTx struct {
+	Tx                *Tx
+	NonceCommitments  map[Hash][]byte
+	WitnessCommitment []byte
 }
 
 // The type of a Contract (below).
@@ -89,6 +97,23 @@ type Retirement struct {
 	AssetID Hash
 	Anchor  []byte
 	LogPos  int
+}
+
+// NewCommitmentsTx takes a Tx object and returns a CommitmentsTx
+// wrapped with the transaction's nonce and witness commitments.
+func NewCommitmentsTx(tx *Tx) *CommitmentsTx {
+	commitmentsTx := &CommitmentsTx{Tx: tx}
+
+	var buf bytes.Buffer
+	tx.WriteWitnessCommitmentTo(&buf)
+	commitmentsTx.WitnessCommitment = buf.Bytes()
+
+	commitmentsTx.NonceCommitments = make(map[Hash][]byte)
+	for _, n := range tx.Nonces {
+		nc := NonceCommitment(n.ID, n.ExpMS)
+		commitmentsTx.NonceCommitments[n.ID] = nc
+	}
+	return commitmentsTx
 }
 
 // NewTx runs the given txvm program through an instance of the txvm

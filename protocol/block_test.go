@@ -86,7 +86,7 @@ func TestGenerateBlock(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, _, err := c.GenerateBlock(ctx, st, bc.Millis(now)+1, txs)
+	got, _, err := c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatalf("err got = %v want nil", err)
 	}
@@ -125,7 +125,7 @@ func TestGenerateBlock(t *testing.T) {
 		txs = append(txs, bctest.EmptyTx(t, b1.Hash(), now.Add(time.Minute)))
 	}
 
-	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, txs)
+	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestGenerateBlock(t *testing.T) {
 	txs[0].Runlimit = 500
 	txs[1].Runlimit = math.MaxInt64
 
-	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, txs)
+	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestGenerateBlock(t *testing.T) {
 		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.InputType, ID: bc.NewHash([32]byte{2})}}},
 	}
 
-	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, txs)
+	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func TestCommitBlockIdempotence(t *testing.T) {
 	s.ApplyBlock(b1)
 	for i := 0; i < numOfBlocks; i++ {
 		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
-		newBlock, newSnapshot, err := c.GenerateBlock(ctx, s, bc.Millis(now)+uint64(i+1), []*bc.Tx{tx})
+		newBlock, newSnapshot, err := c.GenerateBlock(ctx, s, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 		if err != nil {
 			testutil.FatalErr(t, err)
 		}
@@ -234,7 +234,7 @@ func TestPersistSnapshot(t *testing.T) {
 
 	for i := 0; i < numBlocks; i++ {
 		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
-		newBlock, snapshot, err := c.GenerateBlock(ctx, appliedSnapshot, bc.Millis(now)+uint64(i+1), []*bc.Tx{tx})
+		newBlock, snapshot, err := c.GenerateBlock(ctx, appliedSnapshot, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 		if err != nil {
 			t.Fatal(err)
 		}

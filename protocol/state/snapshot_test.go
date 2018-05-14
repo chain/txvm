@@ -32,14 +32,14 @@ func TestApplyTxSpend(t *testing.T) {
 	tx := &bc.Tx{Contracts: []bc.Contract{{Type: bc.InputType, ID: spentOutputID}}}
 
 	// Apply the spend transaction.
-	err := snap.ApplyTx(tx)
+	err := snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if snap.ContractsTree.Contains(spentOutputID.Bytes()) {
 		t.Error("snapshot contains spent prevout")
 	}
-	err = snap.ApplyTx(tx)
+	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err == nil {
 		t.Error("expected error applying spend twice, got nil")
 	}
@@ -50,11 +50,11 @@ func TestApplyIssuanceTwice(t *testing.T) {
 	issuance := &bc.Tx{
 		Nonces: []bc.Nonce{{ID: bc.NewHash([32]byte{2}), ExpMS: 5}},
 	}
-	err := snap.ApplyTx(issuance)
+	err := snap.ApplyTx(bc.NewCommitmentsTx(issuance))
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = snap.ApplyTx(issuance)
+	err = snap.ApplyTx(bc.NewCommitmentsTx(issuance))
 	if err == nil {
 		t.Errorf("expected error for duplicate nonce, got %s", err)
 	}
@@ -66,7 +66,7 @@ func TestCopySnapshot(t *testing.T) {
 		Contracts: []bc.Contract{{Type: bc.OutputType, ID: bc.NewHash([32]byte{1})}},
 		Nonces:    []bc.Nonce{{ID: bc.NewHash([32]byte{2}), ExpMS: 5}},
 	}
-	snap.ApplyTx(tx)
+	snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	dupe := Copy(snap)
 	if !reflect.DeepEqual(dupe, snap) {
 		t.Errorf("got %#v, want %#v", dupe, snap)
@@ -77,7 +77,7 @@ func TestApplyBlock(t *testing.T) {
 	maxTime := uint64(10)
 	// Setup a snapshot with a nonce with a known expiry.
 	snap := empty(t)
-	snap.NonceTree.Insert(NonceCommitment(bc.Hash{}, maxTime))
+	snap.NonceTree.Insert(bc.NonceCommitment(bc.Hash{}, maxTime))
 
 	// Land a block later than the issuance's max time.
 	block := &bc.Block{
@@ -136,13 +136,13 @@ func TestApplyTx(t *testing.T) {
 	tx := &bc.Tx{}
 	snap := Empty()
 
-	err := snap.ApplyTx(tx)
+	err := snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err == nil {
 		t.Error("expected uninitialized error")
 	}
 
 	snap = empty(t)
-	err = snap.ApplyTx(tx)
+	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func TestRefIDNonce(t *testing.T) {
 			ExpMS:   10000,
 		}},
 	}
-	err = snap.ApplyTx(tx)
+	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +179,7 @@ func TestRefIDNonce(t *testing.T) {
 			ExpMS:   10000,
 		}},
 	}
-	err = snap.ApplyTx(tx)
+	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err == nil {
 		t.Error("expected error for applying tx with invalid block id")
 	}
@@ -205,7 +205,7 @@ func TestAtomicApplyTx(t *testing.T) {
 	wantCSRoot := snap.ContractsTree.RootHash()
 	wantNonceRoot := snap.NonceTree.RootHash()
 
-	err := snap.ApplyTx(missingSpend)
+	err := snap.ApplyTx(bc.NewCommitmentsTx(missingSpend))
 	if err == nil {
 		t.Fatal("expected err")
 	}

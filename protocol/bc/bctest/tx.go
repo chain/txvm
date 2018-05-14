@@ -40,3 +40,13 @@ func EmptyTx(t testing.TB, blockID bc.Hash, exp time.Time) *bc.Tx {
 	}
 	return tx
 }
+
+// WithCommitments takes in a slice of *bc.Tx and wraps each of them with
+// their commitments, returning a slice of *bc.CommitmentsTx
+func WithCommitments(txs []*bc.Tx) []*bc.CommitmentsTx {
+	var commitmentsTxs []*bc.CommitmentsTx
+	for _, tx := range txs {
+		commitmentsTxs = append(commitmentsTxs, bc.NewCommitmentsTx(tx))
+	}
+	return commitmentsTxs
+}
