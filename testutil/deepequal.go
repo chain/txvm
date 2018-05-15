@@ -197,10 +197,10 @@ func IsJSONSubset(t testing.TB, a, b []byte, opts ...func(a, b interface{})) boo
 	for _, o := range opts {
 		o(aval, bval)
 	}
-	return isSubset(aval, bval)
+	return IsSubset(aval, bval)
 }
 
-func isSubset(a, b interface{}) bool {
+func IsSubset(a, b interface{}) bool {
 	if reflect.TypeOf(a) != reflect.TypeOf(b) {
 		return false
 	}
@@ -210,7 +210,7 @@ func isSubset(a, b interface{}) bool {
 		// exclusively in a, since this is a subset check
 		vb := b.(map[string]interface{})
 		for k := range vb {
-			if !isSubset(va[k], vb[k]) {
+			if !IsSubset(va[k], vb[k]) {
 				return false
 			}
 		}
@@ -221,7 +221,7 @@ func isSubset(a, b interface{}) bool {
 			return false
 		}
 		for i := range va {
-			if !isSubset(va[i], vb[i]) {
+			if !IsSubset(va[i], vb[i]) {
 				return false
 			}
 		}
