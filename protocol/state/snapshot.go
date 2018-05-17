@@ -77,7 +77,7 @@ func Empty() *Snapshot {
 // PruneNonces, ApplyBlockHeader, and ApplyTx
 // (the latter called in a loop for each transaction). Callers
 // are free to invoke those phases separately.
-func (s *Snapshot) ApplyBlock(block *bc.Block) error {
+func (s *Snapshot) ApplyBlock(block *bc.UnsignedBlock) error {
 	s.PruneNonces(block.TimestampMs)
 
 	err := s.ApplyBlockHeader(block.BlockHeader)

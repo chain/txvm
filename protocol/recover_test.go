@@ -14,28 +14,35 @@ import (
 func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
 	ctx := context.Background()
 	store := memstore.New()
-	b, err := NewInitialBlock(nil, 0, time.Now().Add(-time.Minute))
+	b1, err := NewInitialBlock(nil, 0, time.Now().Add(-time.Minute))
 	if err != nil {
 		testutil.FatalErr(t, err)
 	}
-	c1, err := NewChain(context.Background(), b, store, nil)
+	c1, err := NewChain(context.Background(), b1, store, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	c1.blocksPerSnapshot = 0
 	st := state.Empty()
-	err = st.ApplyBlock(b)
+	err = st.ApplyBlock(b1.UnsignedBlock)
 	if err != nil {
 		testutil.FatalErr(t, err)
 	}
-	err = c1.CommitAppliedBlock(ctx, b, st)
+	err = c1.CommitAppliedBlock(ctx, b1, st)
 	if err != nil {
 		testutil.FatalErr(t, err)
 	}
 
 	tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(0)})}
-	b1, _, err := c1.GenerateBlock(ctx, st, bc.Millis(time.Now()), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
-	err = c1.CommitBlock(ctx, b1)
+	b2, _, err := c1.GenerateBlock(ctx, st, bc.Millis(time.Now()), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sb2, err := bc.SignBlock(b2, st.Header, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c1.CommitBlock(ctx, sb2)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +56,7 @@ func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
 		}
 	}
 
-	c2, err := NewChain(context.Background(), b, store, nil)
+	c2, err := NewChain(context.Background(), b1, store, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +88,7 @@ func TestRecoverSnapshotAdditionalBlocks(t *testing.T) {
 		t.Fatal(err)
 	}
 	st := state.Empty()
-	err = st.ApplyBlock(b)
+	err = st.ApplyBlock(b.UnsignedBlock)
 	if err != nil {
 		testutil.FatalErr(t, err)
 	}
@@ -92,10 +99,12 @@ func TestRecoverSnapshotAdditionalBlocks(t *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		store.SaveBlock(context.Background(), &bc.Block{
-			BlockHeader: &bc.BlockHeader{
-				Height:        uint64(i + 2),
-				NextPredicate: &bc.Predicate{},
-				ContractsRoot: &bc.Hash{},
+			UnsignedBlock: &bc.UnsignedBlock{
+				BlockHeader: &bc.BlockHeader{
+					Height:        uint64(i + 2),
+					NextPredicate: &bc.Predicate{},
+					ContractsRoot: &bc.Hash{},
+				},
 			},
 		})
 	}

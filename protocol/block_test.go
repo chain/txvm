@@ -22,12 +22,12 @@ import (
 func TestGetBlock(t *testing.T) {
 	ctx := context.Background()
 
-	b1 := &bc.Block{BlockHeader: &bc.BlockHeader{Height: 1, NextPredicate: &bc.Predicate{}}}
+	b1 := &bc.Block{UnsignedBlock: &bc.UnsignedBlock{BlockHeader: &bc.BlockHeader{Height: 1, NextPredicate: &bc.Predicate{}}}}
 	noBlocks := memstore.New()
 	oneBlock := memstore.New()
 	oneBlock.SaveBlock(ctx, b1)
 	snapshot := state.Empty()
-	snapshot.ApplyBlock(b1)
+	snapshot.ApplyBlock(b1.UnsignedBlock)
 	oneBlock.SaveSnapshot(ctx, snapshot)
 
 	cases := []struct {
@@ -55,7 +55,7 @@ func TestGetBlock(t *testing.T) {
 }
 
 func TestNoTimeTravel(t *testing.T) {
-	b1 := &bc.Block{BlockHeader: &bc.BlockHeader{Height: 1, NextPredicate: &bc.Predicate{}}}
+	b1 := &bc.Block{UnsignedBlock: &bc.UnsignedBlock{BlockHeader: &bc.BlockHeader{Height: 1, NextPredicate: &bc.Predicate{}}}}
 	ctx := context.Background()
 	c, err := NewChain(ctx, b1, memstore.New(), nil)
 	if err != nil {
@@ -82,7 +82,7 @@ func TestGenerateBlock(t *testing.T) {
 	}
 
 	st := state.Empty()
-	err := st.ApplyBlock(b1)
+	err := st.ApplyBlock(b1.UnsignedBlock)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestGenerateBlock(t *testing.T) {
 	wantNoncesRoot := bc.NewHash(new(patricia.Tree).RootHash())
 
 	b1ID := b1.Hash()
-	want := &bc.Block{
+	want := &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Version:          3,
 			Height:           2,
@@ -171,18 +171,22 @@ func TestCommitBlockIdempotence(t *testing.T) {
 
 	var blocks []*bc.Block
 	s := state.Empty()
-	s.ApplyBlock(b1)
+	s.ApplyBlock(b1.UnsignedBlock)
 	for i := 0; i < numOfBlocks; i++ {
 		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
 		newBlock, newSnapshot, err := c.GenerateBlock(ctx, s, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 		if err != nil {
 			testutil.FatalErr(t, err)
 		}
-		err = c.CommitAppliedBlock(ctx, newBlock, newSnapshot)
+		sb, err := bc.SignBlock(newBlock, s.Header, nil)
 		if err != nil {
 			testutil.FatalErr(t, err)
 		}
-		blocks = append(blocks, newBlock)
+		err = c.CommitAppliedBlock(ctx, sb, newSnapshot)
+		if err != nil {
+			testutil.FatalErr(t, err)
+		}
+		blocks = append(blocks, sb)
 		s = newSnapshot
 	}
 	wantSnapshot := s
@@ -194,7 +198,7 @@ func TestCommitBlockIdempotence(t *testing.T) {
 	}
 	c.MaxNonceWindow = 48 * time.Hour
 	snapshot := state.Empty()
-	snapshot.ApplyBlock(b1)
+	snapshot.ApplyBlock(b1.UnsignedBlock)
 	c.setState(snapshot)
 
 	// Apply all of the blocks concurrently in separate goroutines
@@ -229,7 +233,7 @@ func TestPersistSnapshot(t *testing.T) {
 	numBlocks := int(c.blocksPerSnapshot) - 1 // minus initial block
 
 	s := state.Empty()
-	s.ApplyBlock(b1)
+	s.ApplyBlock(b1.UnsignedBlock)
 	appliedSnapshot := s
 
 	for i := 0; i < numBlocks; i++ {
@@ -238,7 +242,11 @@ func TestPersistSnapshot(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = c.CommitBlock(ctx, newBlock)
+		sb, err := bc.SignBlock(newBlock, appliedSnapshot.Header, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = c.CommitBlock(ctx, sb)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -269,12 +277,12 @@ func TestPersistSnapshot(t *testing.T) {
 // newTestChain returns a new Chain using memstore for storage,
 // along with an initial block b1 (with a 0/0 multisig program).
 // It commits b1 before returning.
-func newTestChain(tb testing.TB, ts time.Time) (c *Chain, b1 *bc.Block) {
+func newTestChain(tb testing.TB, ts time.Time) (c *Chain, sb1 *bc.Block) {
 	ctx := context.Background()
 
 	var err error
 
-	b1, err = NewInitialBlock(nil, 0, ts)
+	b1, err := NewInitialBlock(nil, 0, ts)
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}
@@ -286,7 +294,7 @@ func newTestChain(tb testing.TB, ts time.Time) (c *Chain, b1 *bc.Block) {
 	c.MaxNonceWindow = 48 * time.Hour
 	c.MaxBlockWindow = 100
 	st := state.Empty()
-	err = st.ApplyBlock(b1)
+	err = st.ApplyBlock(b1.UnsignedBlock)
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}

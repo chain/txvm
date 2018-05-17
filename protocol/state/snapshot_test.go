@@ -9,7 +9,7 @@ import (
 
 func empty(t *testing.T) *Snapshot {
 	s := Empty()
-	b1 := &bc.Block{
+	b1 := &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Version:       3,
 			Height:        1,
@@ -80,7 +80,7 @@ func TestApplyBlock(t *testing.T) {
 	snap.NonceTree.Insert(bc.NonceCommitment(bc.Hash{}, maxTime))
 
 	// Land a block later than the issuance's max time.
-	block := &bc.Block{
+	block := &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Height:        2,
 			TimestampMs:   maxTime + 1,
@@ -102,7 +102,7 @@ func TestApplyBlock(t *testing.T) {
 	}
 
 	snap = empty(t)
-	block = &bc.Block{
+	block = &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Height:        1,
 			NextPredicate: &bc.Predicate{},
@@ -114,7 +114,7 @@ func TestApplyBlock(t *testing.T) {
 	}
 
 	snap = empty(t)
-	block = &bc.Block{
+	block = &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Height:        2,
 			NextPredicate: &bc.Predicate{},
@@ -150,7 +150,7 @@ func TestApplyTx(t *testing.T) {
 
 func TestRefIDNonce(t *testing.T) {
 	snap := empty(t)
-	b1 := &bc.Block{
+	b1 := &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Height:        2,
 			NextPredicate: &bc.Predicate{},

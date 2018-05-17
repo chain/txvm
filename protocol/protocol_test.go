@@ -11,7 +11,7 @@ import (
 func TestNewChainHeight(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	block := &bc.Block{BlockHeader: &bc.BlockHeader{NextPredicate: &bc.Predicate{}}}
+	block := &bc.Block{UnsignedBlock: &bc.UnsignedBlock{BlockHeader: &bc.BlockHeader{NextPredicate: &bc.Predicate{}}}}
 	heights := make(chan uint64, 4)
 	c, err := NewChain(ctx, block, memstore.New(), heights)
 	if err != nil {

@@ -80,7 +80,7 @@ func BlockSig(b *bc.Block, predicate *bc.Predicate) error {
 
 // Block validates a block and the transactions within.
 // It does not check the predicate; for that, see ValidateBlockSig.
-func Block(b *bc.Block, prev *bc.BlockHeader) error {
+func Block(b *bc.UnsignedBlock, prev *bc.BlockHeader) error {
 	if b.Height > 1 {
 		if prev == nil {
 			return errors.WithDetailf(errNoPrevBlock, "height %d", b.Height)
@@ -97,7 +97,7 @@ func Block(b *bc.Block, prev *bc.BlockHeader) error {
 // BlockOnly performs those parts of block validation that depend only
 // on the block and not on the previous block header.
 // TODO(eric): consider another name
-func BlockOnly(b *bc.Block) error {
+func BlockOnly(b *bc.UnsignedBlock) error {
 	// TODO(bobg): check version >= 3?
 
 	runlimit := b.Runlimit
@@ -126,7 +126,7 @@ func BlockOnly(b *bc.Block) error {
 
 // BlockPrev performs those parts of block validation that require the
 // previous block's header.
-func BlockPrev(b *bc.Block, prev *bc.BlockHeader) error {
+func BlockPrev(b *bc.UnsignedBlock, prev *bc.BlockHeader) error {
 	if b.Version < prev.Version {
 		return errors.WithDetailf(errVersionRegression, "previous block verson %d, current block version %d", prev.Version, b.Version)
 	}

@@ -119,7 +119,7 @@ func validate(args []string) {
 		err = proto.Unmarshal(prevBytes, &prev)
 		must(err)
 
-		err = validation.Block(&b, &prev)
+		err = validation.Block(b.UnsignedBlock, &prev)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -139,7 +139,7 @@ func validate(args []string) {
 	}
 
 	if b.Height == 1 || *noPrev {
-		err = validation.BlockOnly(&b)
+		err = validation.BlockOnly(b.UnsignedBlock)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)

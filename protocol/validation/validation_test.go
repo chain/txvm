@@ -12,45 +12,45 @@ import (
 
 func TestBlock(t *testing.T) {
 	cases := []struct {
-		f       func(*bc.Block, *bc.Block) (*bc.Block, *bc.BlockHeader)
+		f       func(*bc.UnsignedBlock, *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader)
 		wantErr bool
 	}{{
-		f: func(b1, b2 *bc.Block) (*bc.Block, *bc.BlockHeader) {
+		f: func(b1, b2 *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader) {
 			return b1, nil
 		},
 		wantErr: false,
 	}, {
-		f: func(b1, b2 *bc.Block) (*bc.Block, *bc.BlockHeader) {
+		f: func(b1, b2 *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader) {
 			transactionsRoot := bc.NewHash([32]byte{1})
 			b1.TransactionsRoot = &transactionsRoot // make b1 be invalid
 			return b1, nil
 		},
 		wantErr: true,
 	}, {
-		f: func(b1, b2 *bc.Block) (*bc.Block, *bc.BlockHeader) {
+		f: func(b1, b2 *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader) {
 			return b2, b1.BlockHeader
 		},
 		wantErr: false,
 	}, {
-		f: func(b1, b2 *bc.Block) (*bc.Block, *bc.BlockHeader) {
+		f: func(b1, b2 *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader) {
 			transactionsRoot := bc.NewHash([32]byte{1})
 			b2.TransactionsRoot = &transactionsRoot // make b2 be invalid
 			return b2, b1.BlockHeader
 		},
 		wantErr: true,
 	}, {
-		f: func(b1, b2 *bc.Block) (*bc.Block, *bc.BlockHeader) {
+		f: func(b1, b2 *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader) {
 			b2.Version = 2
 			return b2, b1.BlockHeader
 		},
 		wantErr: true,
 	}, {
-		f: func(b1, b2 *bc.Block) (*bc.Block, *bc.BlockHeader) {
+		f: func(b1, b2 *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader) {
 			return b2, nil
 		},
 		wantErr: true,
 	}, {
-		f: func(b1, b2 *bc.Block) (*bc.Block, *bc.BlockHeader) {
+		f: func(b1, b2 *bc.UnsignedBlock) (*bc.UnsignedBlock, *bc.BlockHeader) {
 			b2.ExtraFields = append(b2.ExtraFields, &bc.DataItem{Type: bc.DataType_INT})
 			return b2, b1.BlockHeader
 		},
@@ -124,9 +124,11 @@ func TestBlockSig(t *testing.T) {
 	}}
 
 	block := &bc.Block{
-		BlockHeader: &bc.BlockHeader{
-			NextPredicate: &bc.Predicate{
-				Version: 1,
+		UnsignedBlock: &bc.UnsignedBlock{
+			BlockHeader: &bc.BlockHeader{
+				NextPredicate: &bc.Predicate{
+					Version: 1,
+				},
 			},
 		},
 	}
@@ -183,7 +185,7 @@ func TestBlockOnly(t *testing.T) {
 	}}
 
 	txRoot := bc.TxMerkleRoot([]*bc.Tx{cases[0].tx})
-	block := &bc.Block{
+	block := &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Version:          3,
 			Runlimit:         5000,
@@ -279,17 +281,17 @@ func TestBlockPrev(t *testing.T) {
 	}}
 
 	for i, c := range cases {
-		gotErr := BlockPrev(&bc.Block{BlockHeader: c.current}, prev)
+		gotErr := BlockPrev(&bc.UnsignedBlock{BlockHeader: c.current}, prev)
 		if errors.Root(gotErr) != c.wantErr {
 			t.Errorf("BlockPrev(%d) = %v want %v", i, gotErr, c.wantErr)
 		}
 	}
 }
 
-func newInitialBlock(tb testing.TB) *bc.Block {
+func newInitialBlock(tb testing.TB) *bc.UnsignedBlock {
 	root := bc.TxMerkleRoot(nil) // calculate the zero value of the tx merkle root
 
-	return &bc.Block{
+	return &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Version:          3,
 			Height:           1,
@@ -300,9 +302,9 @@ func newInitialBlock(tb testing.TB) *bc.Block {
 	}
 }
 
-func generate(tb testing.TB, prev *bc.Block) *bc.Block {
+func generate(tb testing.TB, prev *bc.UnsignedBlock) *bc.UnsignedBlock {
 	prevID := prev.Hash()
-	b := &bc.Block{
+	b := &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Version:         3,
 			Height:          prev.Height + 1,

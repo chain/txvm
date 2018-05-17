@@ -42,7 +42,7 @@ func (c *Chain) GetBlock(ctx context.Context, height uint64) (*bc.Block, error) 
 //
 // After generating the block, the pending transaction pool will be
 // empty.
-func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, timestampMS uint64, txs []*bc.CommitmentsTx) (*bc.Block, *state.Snapshot, error) {
+func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, timestampMS uint64, txs []*bc.CommitmentsTx) (*bc.UnsignedBlock, *state.Snapshot, error) {
 	// TODO(kr): move this into a lower-level package (e.g. chain/protocol/bc)
 	// so that other packages (e.g. chain/protocol/validation) unit tests can
 	// call this function.
@@ -62,7 +62,7 @@ func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, tim
 	if prev.RefsCount < refsCount {
 		refsCount = prev.RefsCount + 1
 	}
-	b := &bc.Block{
+	b := &bc.UnsignedBlock{
 		BlockHeader: &bc.BlockHeader{
 			Version:         3,
 			Height:          prev.Height + 1,
@@ -159,7 +159,7 @@ func (c *Chain) CommitBlock(ctx context.Context, block *bc.Block) error {
 	}
 
 	snapshot := state.Copy(curSnapshot)
-	err = snapshot.ApplyBlock(block)
+	err = snapshot.ApplyBlock(block.UnsignedBlock)
 	if err != nil {
 		return err
 	}
@@ -219,17 +219,19 @@ func NewInitialBlock(pubkeys []ed25519.PublicKey, quorum int, timestamp time.Tim
 	}
 
 	b := &bc.Block{
-		BlockHeader: &bc.BlockHeader{
-			Version:          3,
-			Height:           1,
-			TimestampMs:      bc.Millis(timestamp),
-			TransactionsRoot: &root,
-			ContractsRoot:    &patRoot,
-			NoncesRoot:       &patRoot,
-			NextPredicate: &bc.Predicate{
-				Version: 1,
-				Quorum:  int32(quorum),
-				Pubkeys: pkBytes,
+		UnsignedBlock: &bc.UnsignedBlock{
+			BlockHeader: &bc.BlockHeader{
+				Version:          3,
+				Height:           1,
+				TimestampMs:      bc.Millis(timestamp),
+				TransactionsRoot: &root,
+				ContractsRoot:    &patRoot,
+				NoncesRoot:       &patRoot,
+				NextPredicate: &bc.Predicate{
+					Version: 1,
+					Quorum:  int32(quorum),
+					Pubkeys: pkBytes,
+				},
 			},
 		},
 	}

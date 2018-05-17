@@ -51,7 +51,7 @@ func main() {
 		var block bc.Block
 		err = block.FromBytes(b)
 		must(err)
-		err = snapshot.ApplyBlock(&block)
+		err = snapshot.ApplyBlock(block.UnsignedBlock)
 		if err != nil {
 			log.Fatal(err)
 		}

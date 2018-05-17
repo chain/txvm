@@ -89,7 +89,7 @@ func NewChain(tb testing.TB, opts ...Option) *protocol.Chain {
 	c.MaxNonceWindow = 48 * time.Hour // TODO(tessr): consider adding MaxIssuanceWindow to NewChain
 	c.MaxBlockWindow = 600
 
-	err = conf.initialState.ApplyBlock(b1)
+	err = conf.initialState.ApplyBlock(b1.UnsignedBlock)
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}
@@ -154,7 +154,11 @@ func MakeBlock(tb testing.TB, c *protocol.Chain, txs []*bc.Tx) *bc.Block {
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}
-	err = c.CommitAppliedBlock(ctx, nextBlock, nextState)
+	sb, err := bc.SignBlock(nextBlock, curState.Header, nil)
+	if err != nil {
+		testutil.FatalErr(tb, err)
+	}
+	err = c.CommitAppliedBlock(ctx, sb, nextState)
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}
@@ -162,5 +166,5 @@ func MakeBlock(tb testing.TB, c *protocol.Chain, txs []*bc.Tx) *bc.Block {
 	mutex.Lock()
 	states[c] = nextState
 	mutex.Unlock()
-	return nextBlock
+	return sb
 }

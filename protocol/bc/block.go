@@ -12,12 +12,73 @@ import (
 	"github.com/chain/txvm/protocol/txvm"
 )
 
-// Block describes a complete block, including its header
-// and the transactions it contains.
-type Block struct {
+// UnsignedBlock describes a block with its transactions but no signatures
+// (predicate args).
+type UnsignedBlock struct {
 	*BlockHeader
 	Transactions []*Tx
-	Arguments    []interface{}
+}
+
+type Block struct {
+	*UnsignedBlock
+	Arguments []interface{}
+}
+
+// ErrTooFewSignatures is the error returned when Block.Sign cannot
+// marshal enough signatures for a block.
+var ErrTooFewSignatures = errors.New("too few block signatures")
+
+// SignBlock produces a SignedBlock from a Block. It invokes its
+// callback once for each position in [0..N) where N is the number of
+// pubkeys in the previous block's NextPredicate, until a quorum of
+// signatures is obtained.
+//
+// Any callback returning an error will cause SignBlock to return with an
+// error. A callback may also return (nil, nil), causing it to be
+// skipped silently. If too many callbacks do this, SignBlock will
+// return ErrTooFewSignatures.
+func SignBlock(b *UnsignedBlock, prev *BlockHeader, f func(int) (interface{}, error)) (*Block, error) {
+	sb := &Block{UnsignedBlock: b}
+	if b.Height == 1 {
+		// Block at height 1 does not require a signature.
+		return sb, nil
+	}
+	if prev == nil {
+		return nil, errors.New("must supply previous blockheader to Sign")
+	}
+	pred := prev.NextPredicate
+	if pred == nil {
+		return nil, errors.New("no next predicate in previous blockheader")
+	}
+	if pred.Version != 1 {
+		return nil, errors.New("unknown predicate version")
+	}
+	sb.Arguments = make([]interface{}, len(pred.Pubkeys))
+	q := pred.Quorum
+	if q > 0 && f == nil {
+		return nil, errors.New("no signature function provided")
+	}
+	for i := 0; q > 0 && i < len(pred.Pubkeys); i++ {
+		arg, err := f(i)
+		if err != nil {
+			return nil, errors.Wrapf(err, "getting signature %d for block %d", i, b.Height)
+		}
+		if arg == nil {
+			continue
+		}
+		if sig, ok := arg.([]byte); ok {
+			if len(sig) > 0 {
+				sb.Arguments[i] = sig
+				q--
+			}
+			continue
+		}
+		return nil, errors.New("non-signature in block arguments")
+	}
+	if q > 0 {
+		return nil, ErrTooFewSignatures
+	}
+	return sb, nil
 }
 
 // MarshalText fulfills the json.Marshaler interface.
@@ -88,8 +149,10 @@ func (b *Block) FromBytes(bits []byte) error {
 	if err != nil {
 		return err
 	}
-	b.BlockHeader = rb.Header
-	b.Transactions = txs
+	b.UnsignedBlock = &UnsignedBlock{
+		BlockHeader:  rb.Header,
+		Transactions: txs,
+	}
 	for _, arg := range rb.Arguments {
 		switch arg.Type {
 		case DataType_BYTES:
