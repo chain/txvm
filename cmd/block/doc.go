@@ -9,6 +9,7 @@ Usage:
 	block header [-pretty] <BLOCK
 	block validate [-prev PREVHEX] [-noprev] [-nosig] <BLOCK
 	block new [-quorum QUORUM] [-time TIME] PUBKEYHEX PUBKEYHEX ... >BLOCK
+	block sign -prev PREVHEX PRVHEX PRVHEX ... <BLOCK >BLOCK
 
 	block hash <BLOCK_OR_HEADER
 
@@ -40,6 +41,18 @@ current time unless -time appears, in which case TIME must be a time
 in RFC3339 format, e.g.:
 
 	2006-01-02T15:04:05Z07:00
+
+The sign subcommand adds signatures to a block using the given private
+keys. PREVHEX gives the header of the previous block. The number of
+PRVHEX arguments should equal the number of public keys in the
+previous blockheader's NextPredicate field, and each private key
+should correspond to the public key in the same position. Some of the
+PRVHEX arguments may be the empty string, meaning no signature should
+be added in the corresponding slot. It is an error to supply fewer
+signatures than the quorum threshold specified in the previous
+blockheader. Trailing empty-string arguments may be omitted. Note, any
+signatures already present on the input block are removed before
+producing the output block.
 
 The hash subcommand accepts a block or a block header as input (such
 as is produced by the output of the header subcommand). The output is

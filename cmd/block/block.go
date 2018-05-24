@@ -22,6 +22,7 @@ var modes = map[string]func([]string){
 	"hash":     hash,
 	"header":   header,
 	"new":      newBlock,
+	"sign":     sign,
 	"tx":       tx,
 	"validate": validate,
 }
@@ -84,6 +85,44 @@ func newBlock(args []string) {
 	must(err)
 
 	blockBytes, err := block.Bytes()
+	must(err)
+
+	os.Stdout.Write(blockBytes)
+}
+
+func sign(args []string) {
+	fs := flag.NewFlagSet("sign", flag.PanicOnError)
+	prevHex := fs.String("prev", "", "previous block header (hex)")
+	err := fs.Parse(args)
+	must(err)
+
+	prevBytes, err := hex.DecodeString(*prevHex)
+	must(err)
+
+	var prev bc.BlockHeader
+	err = proto.Unmarshal(prevBytes, &prev)
+	must(err)
+
+	blockBytes, err := ioutil.ReadAll(os.Stdin)
+	must(err)
+
+	block := new(bc.Block)
+	err = block.FromBytes(blockBytes)
+	must(err)
+
+	hash := block.Hash().Bytes()
+
+	block, err = bc.SignBlock(block.UnsignedBlock, &prev, func(idx int) (interface{}, error) {
+		if arg := fs.Arg(idx); arg != "" {
+			prv, err := hex.DecodeString(arg)
+			must(err)
+			return ed25519.Sign(prv, hash), nil
+		}
+		return nil, nil
+	})
+	must(err)
+
+	blockBytes, err = block.Bytes()
 	must(err)
 
 	os.Stdout.Write(blockBytes)
@@ -287,5 +326,6 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "  block header [-pretty] <BLOCK")
 	fmt.Fprintln(os.Stderr, "  block tx [-raw] [-pretty] INDEX <BLOCK")
 	fmt.Fprintln(os.Stderr, "  block new [-quorum QUORUM] [-time TIME] PUBKEYHEX PUBKEYHEX ... >BLOCK")
+	fmt.Fprintln(os.Stderr, "  block sign -prev PREVHEX PRVHEX PRVHEX ... <BLOCK >BLOCK")
 	os.Exit(1)
 }
