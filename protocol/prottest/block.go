@@ -86,8 +86,6 @@ func NewChain(tb testing.TB, opts ...Option) *protocol.Chain {
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}
-	c.MaxNonceWindow = 48 * time.Hour // TODO(tessr): consider adding MaxIssuanceWindow to NewChain
-	c.MaxBlockWindow = 600
 
 	err = conf.initialState.ApplyBlock(b1.UnsignedBlock)
 	if err != nil {
@@ -150,7 +148,7 @@ func MakeBlock(tb testing.TB, c *protocol.Chain, txs []*bc.Tx) *bc.Block {
 	for _, tx := range txs {
 		commitmentsTxs = append(commitmentsTxs, bc.NewCommitmentsTx(tx))
 	}
-	nextBlock, nextState, err := c.GenerateBlock(ctx, curState, now, commitmentsTxs)
+	nextBlock, nextState, err := c.GenerateBlock(ctx, now, commitmentsTxs)
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}

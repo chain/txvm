@@ -3,22 +3,16 @@ package protocol
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"sync/atomic"
 	"time"
 
 	"github.com/chain/txvm/crypto/ed25519"
 	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/log"
-	"github.com/chain/txvm/math/checked"
 	"github.com/chain/txvm/protocol/bc"
 	"github.com/chain/txvm/protocol/patricia"
 	"github.com/chain/txvm/protocol/state"
 )
-
-// maxBlockTxs limits the number of transactions
-// included in each block.
-const maxBlockTxs = 10000
 
 var (
 	// ErrBadContractsRoot is returned when the computed contracts merkle root
@@ -42,82 +36,18 @@ func (c *Chain) GetBlock(ctx context.Context, height uint64) (*bc.Block, error) 
 //
 // After generating the block, the pending transaction pool will be
 // empty.
-func (c *Chain) GenerateBlock(ctx context.Context, snapshot *state.Snapshot, timestampMS uint64, txs []*bc.CommitmentsTx) (*bc.UnsignedBlock, *state.Snapshot, error) {
-	// TODO(kr): move this into a lower-level package (e.g. chain/protocol/bc)
-	// so that other packages (e.g. chain/protocol/validation) unit tests can
-	// call this function.
-	prev := snapshot.Header
-
-	if timestampMS <= prev.TimestampMs {
-		return nil, nil, fmt.Errorf("timestamp %d is not greater than prevblock timestamp %d", timestampMS, prev.TimestampMs)
+func (c *Chain) GenerateBlock(ctx context.Context, timestampMS uint64, txs []*bc.CommitmentsTx) (*bc.UnsignedBlock, *state.Snapshot, error) {
+	err := c.bb.Start(c.State(), timestampMS)
+	if err != nil {
+		return nil, nil, err
 	}
-
-	// Make a copy of the snapshot that we can apply our changes to.
-	newSnapshot := state.Copy(c.state.snapshot)
-
-	newSnapshot.PruneNonces(timestampMS)
-
-	prevID := prev.Hash()
-	refsCount := int64(c.MaxBlockWindow)
-	if prev.RefsCount < refsCount {
-		refsCount = prev.RefsCount + 1
-	}
-	b := &bc.UnsignedBlock{
-		BlockHeader: &bc.BlockHeader{
-			Version:         3,
-			Height:          prev.Height + 1,
-			PreviousBlockId: &prevID,
-			TimestampMs:     timestampMS,
-			RefsCount:       refsCount,
-			NextPredicate:   prev.NextPredicate,
-		},
-	}
-
-	var witnessCommitments [][]byte
-
-	for _, commitmentsTx := range txs {
-		if len(b.Transactions) >= maxBlockTxs {
-			break
-		}
-
-		tx := commitmentsTx.Tx
-
-		// Filter out transactions that conflict with the block timestamp.
-		err := c.checkTransactionTime(tx, timestampMS)
+	for _, tx := range txs {
+		err := c.bb.AddTx(tx)
 		if err != nil {
-			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.Program))
-			continue
+			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.Tx.Program))
 		}
-
-		runlimit, ok := checked.AddInt64(b.Runlimit, tx.Runlimit)
-		if !ok {
-			continue
-		}
-
-		// Filter out double-spends etc.
-		err = newSnapshot.ApplyTx(commitmentsTx)
-		if err != nil {
-			log.Printkv(ctx, "event", "invalid tx", "error", err, "tx", hex.EncodeToString(tx.Program))
-			continue
-		}
-
-		b.Runlimit = runlimit
-		b.Transactions = append(b.Transactions, tx)
-		witnessCommitments = append(witnessCommitments, commitmentsTx.WitnessCommitment)
 	}
-
-	txRoot := bc.TxMerkleRoot(b.Transactions)
-	b.TransactionsRoot = &txRoot
-
-	contractRoot := bc.NewHash(newSnapshot.ContractsTree.RootHash())
-	b.ContractsRoot = &contractRoot
-
-	nonceRoot := bc.NewHash(newSnapshot.NonceTree.RootHash())
-	b.NoncesRoot = &nonceRoot
-
-	err := newSnapshot.ApplyBlockHeader(b.BlockHeader)
-
-	return b, newSnapshot, err
+	return c.bb.Build()
 }
 
 // CommitAppliedBlock takes a block, commits it to persistent storage and

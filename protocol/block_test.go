@@ -86,7 +86,7 @@ func TestGenerateBlock(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, _, err := c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	got, _, err := c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatalf("err got = %v want nil", err)
 	}
@@ -116,7 +116,7 @@ func TestGenerateBlock(t *testing.T) {
 		t.Errorf("generated block:\ngot:  %+v\nwant: %+v", got, want)
 	}
 
-	_, _, err = c.GenerateBlock(ctx, st, bc.Millis(now), nil)
+	_, _, err = c.GenerateBlock(ctx, bc.Millis(now), nil)
 	if err == nil {
 		t.Error("expected error for bad generate timestamp")
 	}
@@ -125,7 +125,7 @@ func TestGenerateBlock(t *testing.T) {
 		txs = append(txs, bctest.EmptyTx(t, b1.Hash(), now.Add(time.Minute)))
 	}
 
-	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	got, _, err = c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestGenerateBlock(t *testing.T) {
 	txs[0].Runlimit = 500
 	txs[1].Runlimit = math.MaxInt64
 
-	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	got, _, err = c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +151,7 @@ func TestGenerateBlock(t *testing.T) {
 		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.InputType, ID: bc.NewHash([32]byte{2})}}},
 	}
 
-	got, _, err = c.GenerateBlock(ctx, st, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	got, _, err = c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func TestCommitBlockIdempotence(t *testing.T) {
 	s.ApplyBlock(b1.UnsignedBlock)
 	for i := 0; i < numOfBlocks; i++ {
 		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
-		newBlock, newSnapshot, err := c.GenerateBlock(ctx, s, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
+		newBlock, newSnapshot, err := c.GenerateBlock(ctx, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 		if err != nil {
 			testutil.FatalErr(t, err)
 		}
@@ -196,7 +196,7 @@ func TestCommitBlockIdempotence(t *testing.T) {
 	if err != nil {
 		testutil.FatalErr(t, err)
 	}
-	c.MaxNonceWindow = 48 * time.Hour
+	c.bb.MaxNonceWindow = 48 * time.Hour
 	snapshot := state.Empty()
 	snapshot.ApplyBlock(b1.UnsignedBlock)
 	c.setState(snapshot)
@@ -238,7 +238,7 @@ func TestPersistSnapshot(t *testing.T) {
 
 	for i := 0; i < numBlocks; i++ {
 		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
-		newBlock, snapshot, err := c.GenerateBlock(ctx, appliedSnapshot, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
+		newBlock, snapshot, err := c.GenerateBlock(ctx, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -290,9 +290,8 @@ func newTestChain(tb testing.TB, ts time.Time) (c *Chain, sb1 *bc.Block) {
 	if err != nil {
 		testutil.FatalErr(tb, err)
 	}
-	// TODO(tessr): consider adding MaxNonceWindow to NewChain
-	c.MaxNonceWindow = 48 * time.Hour
-	c.MaxBlockWindow = 100
+	c.bb.MaxNonceWindow = 48 * time.Hour
+	c.bb.MaxBlockWindow = 100
 	st := state.Empty()
 	err = st.ApplyBlock(b1.UnsignedBlock)
 	if err != nil {

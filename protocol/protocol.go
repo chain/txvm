@@ -80,7 +80,6 @@ package protocol
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/log"
@@ -113,10 +112,7 @@ type Store interface {
 // objects can be safely stored.
 type Chain struct {
 	InitialBlockHash bc.Hash
-
-	// only used by generators
-	MaxNonceWindow time.Duration
-	MaxBlockWindow uint64
+	bb               *BlockBuilder
 
 	state struct {
 		cond     sync.Cond // protects height, block, snapshot
@@ -134,10 +130,12 @@ type Chain struct {
 func NewChain(ctx context.Context, initialBlock *bc.Block, store Store, heights <-chan uint64) (*Chain, error) {
 	c := &Chain{
 		InitialBlockHash:  initialBlock.Hash(),
+		bb:                NewBlockBuilder(),
 		store:             store,
 		pendingSnapshots:  make(chan *state.Snapshot, 1),
 		blocksPerSnapshot: defaultBlocksPerSnapshot,
 	}
+
 	c.state.cond.L = new(sync.Mutex)
 	c.state.snapshot = state.Empty()
 

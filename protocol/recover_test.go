@@ -34,7 +34,7 @@ func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {
 	}
 
 	tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(0)})}
-	b2, _, err := c1.GenerateBlock(ctx, st, bc.Millis(time.Now()), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
+	b2, _, err := c1.GenerateBlock(ctx, bc.Millis(time.Now()), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
 	if err != nil {
 		t.Fatal(err)
 	}
