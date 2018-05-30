@@ -51,9 +51,33 @@ func (bb *BlockBuilder) Start(snapshot *state.Snapshot, timestampMS uint64) erro
 	return nil
 }
 
+var (
+	// ErrBlockFull happens when trying to add a transaction to a block
+	// that already contains MaxBlockTxs transactions.
+	ErrBlockFull = errors.New("block is full")
+
+	// ErrBlockRunlimit happens when trying to add a transaction to a
+	// block that would cause the block's total runlimit to overflow.
+	ErrBlockRunlimit = errors.New("block runlimit overflow")
+
+	// ErrTxTooOld happens when trying to add a transaction to a block
+	// whose timestamp is after the end of a timerange in the
+	// transaction.
+	ErrTxTooOld = errors.New("transaction timerange is in the past")
+
+	// ErrTxTooNew happens when trying to add a transaction to a block
+	// whose timestamp is before the beginning of a timerange in the
+	// transaction.
+	ErrTxTooNew = errors.New("transaction timerange is in the future")
+
+	// ErrTxLongNonce happens when trying to add a transaction with a
+	// nonce whose expiration is more than MaxNonceWindow in the future.
+	ErrTxLongNonce = errors.New("transaction nonce expires too far in the future")
+)
+
 func (bb *BlockBuilder) AddTx(tx *bc.CommitmentsTx) error {
 	if len(bb.txs) >= bb.MaxBlockTxs {
-		return errors.New("block is full")
+		return ErrBlockFull
 	}
 	err := bb.checkTransactionTime(tx.Tx, bb.timestampMS)
 	if err != nil {
@@ -61,7 +85,7 @@ func (bb *BlockBuilder) AddTx(tx *bc.CommitmentsTx) error {
 	}
 	runlimit, ok := checked.AddInt64(bb.runlimit, tx.Tx.Runlimit)
 	if !ok {
-		return errors.New("block runlimit overflow")
+		return ErrBlockRunlimit
 	}
 	err = bb.snapshot.ApplyTx(tx)
 	if err != nil {
@@ -132,17 +156,17 @@ func (bb *BlockBuilder) Build() (*bc.UnsignedBlock, *state.Snapshot, error) {
 func (bb *BlockBuilder) checkTransactionTime(tx *bc.Tx, blockTimeMS uint64) error {
 	for _, tr := range tx.Timeranges {
 		if tr.MaxMS > 0 && blockTimeMS > uint64(tr.MaxMS) {
-			return fmt.Errorf("transaction time range %d-%d too old", tr.MinMS, tr.MaxMS)
+			return ErrTxTooOld
 		}
 		if tr.MinMS > 0 && blockTimeMS > 0 && blockTimeMS < uint64(tr.MinMS) {
-			return fmt.Errorf("transaction time range %d-%d too far in the future", tr.MinMS, tr.MaxMS)
+			return ErrTxTooNew
 		}
 	}
 
 	if bb.MaxNonceWindow > 0 {
 		for _, nonce := range tx.Nonces {
 			if nonce.ExpMS > bc.DurationMillis(bb.MaxNonceWindow)+blockTimeMS {
-				return fmt.Errorf("nonce's time window is larger than the network maximum (%s)", bb.MaxNonceWindow)
+				return ErrTxLongNonce
 			}
 		}
 	}
