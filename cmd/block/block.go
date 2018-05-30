@@ -15,10 +15,12 @@ import (
 	"github.com/chain/txvm/crypto/ed25519"
 	"github.com/chain/txvm/protocol"
 	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/state"
 	"github.com/chain/txvm/protocol/validation"
 )
 
 var modes = map[string]func([]string){
+	"build":    build,
 	"hash":     hash,
 	"header":   header,
 	"new":      newBlock,
@@ -39,6 +41,65 @@ func main() {
 	}
 
 	fn(os.Args[2:])
+}
+
+func build(args []string) {
+	fs := flag.NewFlagSet("build", flag.PanicOnError)
+
+	var (
+		timeStr = fs.String("time", "", "block timestamp")
+		snapOut = fs.String("snapout", "", "output file for snapshot")
+	)
+
+	err := fs.Parse(args)
+	must(err)
+
+	var ts time.Time
+	if *timeStr == "" {
+		ts = time.Now()
+	} else {
+		ts, err = time.Parse(time.RFC3339, *timeStr)
+		must(err)
+	}
+	timestampMS := bc.Millis(ts)
+
+	bb := protocol.NewBlockBuilder()
+
+	snapshotBits, err := ioutil.ReadAll(os.Stdin)
+	must(err)
+	snapshot := new(state.Snapshot)
+	err = snapshot.FromBytes(snapshotBits)
+	must(err)
+
+	err = bb.Start(snapshot, timestampMS)
+	must(err)
+
+	for _, arg := range fs.Args() {
+		txbits, err := ioutil.ReadFile(arg)
+		must(err)
+		rawTx := new(bc.RawTx)
+		err = proto.Unmarshal(txbits, rawTx)
+		must(err)
+		tx, err := bc.NewTx(rawTx.Program, rawTx.Version, rawTx.Runlimit)
+		must(err)
+		err = bb.AddTx(bc.NewCommitmentsTx(tx))
+		must(err)
+	}
+
+	ub, newSnapshot, err := bb.Build()
+	must(err)
+
+	if *snapOut != "" {
+		newSnapshotBytes, err := newSnapshot.Bytes()
+		err = ioutil.WriteFile(*snapOut, newSnapshotBytes, 0644)
+		must(err)
+	}
+
+	b := &bc.Block{UnsignedBlock: ub}
+	bbytes, err := b.Bytes()
+	must(err)
+
+	os.Stdout.Write(bbytes)
 }
 
 func newBlock(args []string) {
@@ -326,6 +387,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "  block header [-pretty] <BLOCK")
 	fmt.Fprintln(os.Stderr, "  block tx [-raw] [-pretty] INDEX <BLOCK")
 	fmt.Fprintln(os.Stderr, "  block new [-quorum QUORUM] [-time TIME] PUBKEYHEX PUBKEYHEX ... >BLOCK")
+	fmt.Fprintln(os.Stderr, "  block build [-time TIME] [-snapout FILE] TXFILE TXFILE ... <SNAPSHOT >BLOCK")
 	fmt.Fprintln(os.Stderr, "  block sign -prev PREVHEX PRVHEX PRVHEX ... <BLOCK >BLOCK")
 	os.Exit(1)
 }

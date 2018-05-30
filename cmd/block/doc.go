@@ -9,6 +9,7 @@ Usage:
 	block header [-pretty] <BLOCK
 	block validate [-prev PREVHEX] [-noprev] [-nosig] <BLOCK
 	block new [-quorum QUORUM] [-time TIME] PUBKEYHEX PUBKEYHEX ... >BLOCK
+	block build [-time TIME] [-snapout FILE] TXFILE TXFILE ... <SNAPSHOT >BLOCK
 	block sign -prev PREVHEX PRVHEX PRVHEX ... <BLOCK >BLOCK
 
 	block hash <BLOCK_OR_HEADER
@@ -41,6 +42,23 @@ current time unless -time appears, in which case TIME must be a time
 in RFC3339 format, e.g.:
 
 	2006-01-02T15:04:05Z07:00
+
+The build subcommand creates a new block from a list of transactions
+(supplied as separate files) and a snapshot of the blockchain
+state. The new block will have the height of the snapshot's latest
+block plus one. Its timestamp will be the current time unless -time
+appears, in which case TIME must be a time in RFC3339 format (as
+above). An updated snapshot can optionally be written to a named file
+with -snapout. Alternatively, an updated snapshot can be computed from
+the new block using the bcstate command (qv).
+
+A new blockchain may be bootstrapped like so:
+
+	block new ...args... | tee BLOCK1 | bcstate -block - > SNAPSHOT1
+
+Subsequent blocks may then be generated with:
+
+	block build -snapout SNAPSHOT_n ...txfiles... <SNAPSHOT_n-1 >BLOCK_n
 
 The sign subcommand adds signatures to a block using the given private
 keys. PREVHEX gives the header of the previous block. The number of

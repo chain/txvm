@@ -36,6 +36,14 @@ Get the block’s ID (which is also the blockchain ID) like this:
 block hash <initial-block >blockchain-id
 ```
 
+The history of the blockchain is encapsulated in state snapshots,
+updated after each block. We can create our initial state snapshot
+like this:
+
+```sh
+bcstate -block initial-block > initial-snapshot
+```
+
 ## Creating the first transaction
 
 The new blockchain initially contains no value, so the first
@@ -93,7 +101,26 @@ tx build issue -blockchain `hex <blockchain-id` -quorum 1 -prv `hex <assetsigner
 
 ## Adding the transaction to a block
 
-TBD (need a `gen` subcommand for `block`).
+We can now create a new block for the blockchain containing this
+transaction.
+
+```sh
+block build -snapout snapshot.2 issue-100-to-alice <initial-snapshot >block.2
+```
+
+This command also creates an updated state snapshot in the file
+`snapshot.2`.
+
+The output of `block build` is an _unsigned_ block. To sign it, run
+the output through `block sign` like this:
+
+```sh
+block build -snapout snapshot.2 issue-100-to-alice <initial-snapshot >unsigned-block.2
+block sign -prev `block header <initial-block | hex` `hex <blocksigner.prv` <unsigned-block.2 >block.2
+```
+
+If you now feed `unsigned-block.2` to `block validate` it will fail,
+but `block.2` will succeed.
 
 ## Spending the earlier output contract
 
