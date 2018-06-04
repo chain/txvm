@@ -45,7 +45,7 @@ func TestPrefix(t *testing.T) {
 	SetOutput(os.Stdout)
 
 	got := buf.String()
-	wantPrefix := "foo=bar "
+	wantPrefix := "at=log_test.go:44 foo=bar "
 	if !strings.HasPrefix(got, wantPrefix) {
 		t.Errorf("output = %q want prefix %q", got, wantPrefix)
 	}

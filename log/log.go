@@ -120,9 +120,10 @@ func Printkv(ctx context.Context, keyvals ...interface{}) {
 	}
 
 	// Prepend the log entry with auto-generated fields.
-	out := fmt.Sprintf("%s=%s", KeyCaller, caller())
+	callerPrefix := fmt.Sprintf("%s=%s ", KeyCaller, caller())
 
 	var stack interface{}
+	var out string
 	for i := 0; i < len(keyvals); i += 2 {
 		k := keyvals[i]
 		v := keyvals[i+1]
@@ -139,6 +140,7 @@ func Printkv(ctx context.Context, keyvals ...interface{}) {
 	}
 
 	logWriterMu.Lock()
+	logWriter.Write([]byte(callerPrefix))
 	logWriter.Write(procPrefix)
 	logWriter.Write(prefix(ctx))
 	logWriter.Write([]byte(out)) // ignore errors
