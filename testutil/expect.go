@@ -14,6 +14,7 @@ var wd, _ = os.Getwd()
 
 // FatalErr calls t.Fatal with err and a stack trace.
 func FatalErr(t testing.TB, err error) {
+	t.Helper()
 	args := []interface{}{err}
 	args = append(args, errors.Data(err))
 	stack := errors.Stack(err)
