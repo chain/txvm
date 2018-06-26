@@ -15,9 +15,9 @@ result, or the _output_, of some transaction, and hasn’t yet been
 spent. Utxo stands for “unspent transaction output.”
 
 Some other blockchains organize their state around top-level account
-objects. Each account holds a balance of some value and is protected
-by a public/private keypair. Supplying a suitable signature allows
-funds from the account to be used in contracts.
+objects. Each account holds a balance of some kind of asset and is
+protected by a public/private keypair. Supplying a suitable signature
+allows funds from the account to be used in contracts.
 
 Accounts are a higher-level abstraction than utxos, meaning it should
 be possible to model accounts with utxos. Here’s how that looks in
@@ -42,11 +42,11 @@ in the contract stack as it `output`s itself to the blockchain state
 to await the next operation. In TxVM assembly language that’s simply:
 
 ```
-get get [main] output
+get get [...main...] output
 ```
 
-Here, [main] is a placeholder for the code of the account contract’s
-main body. We’ll develop that in the following sections.
+Here, `[...main...]` is a placeholder for the code of the account
+contract’s main body. We’ll develop that in the following sections.
 
 First let’s choose a convention for the two items stored on the
 account contract’s stack: let’s say that the value containing the
@@ -59,22 +59,30 @@ let’s return both to the caller by querying them from the Value on top
 of the contract stack and `put`ting them onto the argument stack.
 
 ```
-assetid put
-amount put
-
+         contract stack          arg stack
+         --------------          ---------
+         pubkey balance
+assetid  pubkey balance assetid
+put      pubkey balance          assetid
+amount   pubkey balance amount   assetid
+put      pubkey balance          assetid amount
 ```
 
 ## Deposit new funds
 
 For this clause, the caller will supply a Value object on the argument
-stack. We’ll consume it with `get` and merge it into the Value on top
-of the contract stack.
+stack. We’ll consume it with `get` and then `merge` it into the Value
+on top of the contract stack.
 
 This clause will fail if the two Values don’t have the same asset
 type.
 
 ```
-get merge
+       contract stack          arg stack
+       --------------          ---------
+       pubkey balance          deposit
+get    pubkey balance deposit
+merge  pubkey newBalance
 ```
 
 ## Withdraw funds
@@ -89,21 +97,27 @@ signature-check contract with suitable arguments in order to “clear”
 it from the stack. This ensures that no one but the authorized account
 holder may make withdrawals.
 
-Consuming the amount argument and returning the desired value is
-simple. It’s just:
+Consuming the amount argument and returning the desired Value is
+simple. It’s just `get split put`:
 
 ```
-get split put
+       contract stack                      arg stack
+       --------------                      ---------
+       pubkey balance                      amount
+get    pubkey balance amount
+split  pubkey remainingBalance withdrawal
+put    pubkey remainingBalance             withdrawal
 ```
 
 This leaves the account pubkey and a Value with the remaining balance
 on the contract stack while putting the requested Value on the
-argument stack. The `split` instruction will fail if the requested
-amount is greater than the amount in the Value on the stack.
+argument stack. Note that the `split` instruction will fail if the
+requested amount is greater than the amount in the Value on the stack.
 
-The interesting part is the signature-check contract. It should
-require a signature, then check (with the `checksig` instruction) that
-it matches the account’s pubkey and some message being signed.
+The interesting part is the rest of this clause: the signature-check
+contract. It should require a signature, then check (with the
+`checksig` instruction) that it matches the account’s pubkey and some
+message being signed.
 
 What message should we require the caller to sign?
 
@@ -147,63 +161,75 @@ transaction’s hash.
 Here’s the full withdraw clause, with some discussion below.
 
 ```
-                                                       #                stack begins as: [pubkey balance]
-get                                                    # consume amount argument         [pubkey balance amount]
-split                                                  # split balance into two Values   [pubkey newbalance requestedval]
-put                                                    # move withdrawal to the argstack [pubkey newbalance]
-swap dup                                               # make a copy of pubkey           [newbalance pubkey pubkey]
-put                                                    # move it to the argstack         [newbalance pubkey]
-swap                                                   # restore stack ordering          [pubkey newbalance]
-[get [txid swap get 0 checksig verify] yield] contract # create a new contract           [pubkey newbalance sigchecker1]
-call                                                   # call it (see below)             [pubkey newbalance]
+                           contract stack                       arg stack        
+                           --------------                       ---------        
+                           pubkey balance                       amount           
+get                        pubkey balance amount                                 
+split                      pubkey remainingBalance withdrawal                    
+put                        pubkey remainingBalance              withdrawal       
+swap dup                   remainingBalance pubkey pubkey       withdrawal       
+put                        remainingBalance pubkey              withdrawal pubkey
+swap                       pubkey remainingBalance              withdrawal pubkey
+[...checksig...] contract  pubkey remainingBalance sigChecker1  withdrawal pubkey
+call                       pubkey remainingBalance              withdrawal sigChecker2
 ```
 
-The final steps of this clause deserve some explanation. `[...]
-contract` means “assemble these instructions into bytecode and turn
-them into a new contract.” The new contract goes onto the stack (as
-“sigchecker1” in the depiction above). The next instruction, `call`,
-takes it off the stack and runs it.
+Here, `[...checksig...]` is short for:
 
-That nested contract does two things when it runs:
+```
+[get [txid swap get 0 checksig verify] yield]
+```
 
-`get`
+which is a signature-checking contract. The `contract` instruction
+following it means, “assemble these instructions into bytecode and
+turn them into a new contract.” The new contract goes onto the stack
+(as “sigChecker1” in the depiction above). The next instruction,
+`call`, takes it off the stack and runs it. Running it at this point
+does two things:
 
-and
-
-`[txid swap get 0 checksig verify] yield`
+1. `get`
+2. `[txid swap get 0 checksig verify] yield`
 
 The `get` instruction moves the account’s pubkey from the argstack to
-the contract stack. (Recall that the withdraw clause made a copy of
-the pubkey and put it on the argstack.)
+sigChecker1’s contract stack.
 
-The `[...] yield` means “return to the caller, but leave this contract
-on the argstack (together with the items on its contract stack), and
-the next time it’s called, run these instructions.” So some time
-later, after the transaction’s `finalize` instruction executes, the
-caller can get the transaction’s hash, produce a signature, then add
-further instructions to the transaction that put the signature on the
-argument stack and invoke this remaining contract one more
-time. Here’s what happens during that final call:
+The `[...] yield` means “return to the caller,” (the withdraw clause
+in this case), “but leave this contract on the argstack, and change
+its program to [the instructions preceding the `yield`].” Since its
+program has changed, we’ve denoted the updated contract as sigChecker2
+above.
+
+Remember that by the rules of TxVM, no contract may be left on a stack
+at the end of a transaction, and the only way to get a contract _off_
+a stack is to call it. So sigChecker2 will have to be called again at
+some point in this same transaction. Since sigChecker2’s program
+includes a `txid` instruction, it will have to run after the
+transaction’s `finalize` instruction. When it does, it will expect a
+signature on the argument stack.  It will check that signature against
+the pubkey it contains and the transaction’s hash.
 
 ```
-         #                  stack begins as: [pubkey]
-txid     # add transaction hash to the stack [pubkey hash]
-swap     # reorder                           [hash pubkey]
-get      # move signature from argstack      [hash pubkey sig]
-0        # select “ed25519” signature scheme [hash pubkey sig 0]
-checksig # compute valid-signature boolean   [bool]
-verify   # fail if bool is not true          []
+          contract stack     arg stack 
+          --------------     --------- 
+          pubkey             sig       
+txid      pubkey hash        sig       
+swap      hash pubkey        sig       
+get       hash pubkey sig
+0         hash pubkey sig 0
+checksig  result
+verify
 ```
+
+(The literal 0 selects the “ed25519” signature scheme. The `checksig`
+instruction produces a boolean result on the contract stack, and
+`verify` causes the transaction to fail if that boolean is false.)
 
 It’s important to note that, even though the withdraw clause returns
 the withdrawn Value before checking for an authorizing signature,
 there is no way for that Value to escape without the signature being
-present. The rules of TxVM require that all stacks are empty at the
-end of a transaction, and the only way to get a contract off the stack
-is to run it until _its_ stack is empty. So the signature-check
-contract can’t be skipped, and if the transaction cannot complete, it
-is excluded from the blockchain and nothing it does ever actually
-happens.
+present. The signature-check contract can’t be skipped or left on the
+stack. If it is, the transaction is invalid and excluded from the
+blockchain, so nothing it does ever actually happens.
 
 ## Putting it all together
 
@@ -212,7 +238,7 @@ selector on the top of the argument stack, telling it which clause to
 execute (and also how to interpret any other values on the argument
 stack). After the selected clause executes, it will `output` itself
 again to await the next transaction. Note that the contract stack is
-always `[pubkey value]` at the beginning and the end of each clause.
+always `[pubkey balance]` at the beginning and the end of each clause.
 
 ```
 get                      # consume the selector
