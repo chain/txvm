@@ -2,6 +2,7 @@
 package merkle
 
 import (
+	"errors"
 	"math"
 
 	"github.com/chain/txvm/crypto/sha3"
@@ -13,6 +14,42 @@ var (
 	interiorPrefix  = []byte{0x01}
 	emptyStringHash = sha3.Sum256(nil)
 )
+
+// AuditHash stores the hash value and denotes which side of the concatenation
+// operation it should be on.
+// For example, if we have a hashed item A and an audit hash {Val: B, RightOperator: false},
+// the validation is: H(B + A).
+type AuditHash struct {
+	Val           [32]byte
+	RightOperator bool // FALSE indicates the hash should be on the LEFT side of concatenation, TRUE for right side.
+}
+
+// Proof returns the proofs required to validate an item at index i, not including the original item i.
+// This errors when the requested index is out of bounds.
+func Proof(items [][]byte, i int) ([]AuditHash, error) {
+	if i < 0 || i >= len(items) {
+		return nil, errors.New("index %v is out of bounds")
+	}
+	if len(items) == 1 {
+		return []AuditHash{}, nil
+	}
+
+	k := prevPowerOfTwo(len(items))
+	recurse := items[:k]
+	aggregate := items[k:]
+	rightOperator := true
+	if i >= k {
+		i = i - k
+		recurse, aggregate = aggregate, recurse
+		rightOperator = false
+	}
+	res, err := Proof(recurse, i)
+	if err != nil {
+		return nil, err
+	}
+	res = append(res, AuditHash{Root(aggregate), rightOperator})
+	return res, nil
+}
 
 // Root creates a merkle tree from a slice of byte slices
 // and returns the root hash of the tree.
