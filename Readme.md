@@ -4,9 +4,10 @@ This repository contains the source code for TxVM and related components of the 
 
 TxVM is a new model for blockchain transactions. TxVM seeks to achieve the expressiveness and flexibility of an imperative contract model such as Ethereum's while maintaining the efficiency, safety, and scalability of a declarative transaction model such as Bitcoin's.
 
-* [TxVM White Paper](whitepaper/whitepaper.pdf)
+* [TxVM White Paper](https://chain.com/assets/txvm.pdf)
 * [TxVM Specification](specifications/txvm.md)
 * [Documentation for TxVM command line tools](https://godoc.org/github.com/chain/txvm)
+* [Presentation](https://www.youtube.com/watch?v=qY_0MJDMBNY) and [slides](https://cyber.stanford.edu/sites/default/files/txvm_stanford_jan24.pdf)
 
 ## Installation
 
