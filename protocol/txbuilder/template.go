@@ -18,18 +18,7 @@ import (
 	"github.com/chain/txvm/protocol/txvm/txvmutil"
 )
 
-// These constants limit the size of a transaction.
-// They are a pre-runlimit enforcement.
-// TODO(bobg): enforce these at the application layer, not the
-// protocol layer.
-const (
-	maxEntries = 1000
-	maxKeys    = 20000
-	maxSigKeys = 20000
-	maxRefdata = 50000000 // 50mb
-
-	latestOutputVersion = 2
-)
+const latestOutputVersion = 2
 
 func NewTemplate(maxTime time.Time, tags []byte) *Template {
 	tpl := new(Template)
@@ -445,43 +434,19 @@ func (tpl *Template) Dematerialize() {
 // The resulting program is complete up until op.Finalize.
 // It does not include the transaction's signatures.
 func (tpl *Template) materializeTx() (*materialization, error) {
-	var (
-		entries                []entry
-		refCost, keys, sigKeys int
-	)
+	var entries []entry
+
 	for _, inp := range tpl.Inputs {
-		refCost += len(inp.InputRefdata)
-		sigKeys += len(inp.Pubkeys)
 		entries = append(entries, inp)
 	}
 	for _, iss := range tpl.Issuances {
-		refCost += len(iss.Refdata)
-		sigKeys += len(iss.Pubkeys)
 		entries = append(entries, iss)
 	}
 	for _, out := range tpl.Outputs {
-		refCost += len(out.Refdata)
-		keys += len(out.Pubkeys)
 		entries = append(entries, out)
 	}
 	for _, ret := range tpl.Retirements {
-		refCost += len(ret.Refdata)
 		entries = append(entries, ret)
-	}
-	refCost += len(tpl.TxTags)
-
-	if len(entries) > maxEntries {
-		return nil, errors.WithDetailf(ErrRunlimit, "transaction has %d entries, exceeding %d limit", len(entries), maxEntries)
-	}
-
-	if sigKeys > maxSigKeys {
-		return nil, errors.WithDetailf(ErrRunlimit, "transaction has %d signature keys, exceeding %d limit", sigKeys, maxSigKeys)
-	}
-	if keys > maxKeys {
-		return nil, errors.WithDetailf(ErrRunlimit, "transaction has %d output keys, exceeding %d limit", keys, maxKeys)
-	}
-	if refCost > maxRefdata {
-		return nil, errors.WithDetailf(ErrRunlimit, "transaction has %d bytes of refdata, exceeding %d limit", refCost, maxRefdata)
 	}
 
 	var b txvmutil.Builder
