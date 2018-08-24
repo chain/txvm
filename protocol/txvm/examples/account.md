@@ -211,9 +211,9 @@ the pubkey it contains and the transaction’s hash.
 ```
           contract stack     arg stack 
           --------------     --------- 
-          pubkey             sig       
-txid      pubkey hash        sig       
-swap      hash pubkey        sig       
+          pubkey             sig
+txid      pubkey hash        sig
+swap      hash pubkey        sig
 get       hash pubkey sig
 0         hash pubkey sig 0
 checksig  result
