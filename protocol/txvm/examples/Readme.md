@@ -32,5 +32,5 @@ but they must not be used to control any real value.
 * [Escrow payments](escrow.md).
   How to entrust payments to a third party,
   who authorizes their release when some condition is met.
-* Collateralized loan TBD
-* Merkleized clauses TBD
+* [Collateralized loans](collateralized.md).
+  How to secure some collateral until a loan is either repaid or defaulted on.
