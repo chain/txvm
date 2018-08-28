@@ -198,7 +198,7 @@ var (
 	put x'2222222222222222222222222222222222222222222222222222222222222222' put 1 put 1 put
 	[%s] contract call
 	finalize
-`, p2spUnlock, p2spSrc, p2spSrc) // arg stack now: [... 10VAL SIGCHECKCONTRACT]
+`, p2spUnlock, p2spSrc, p2spSrc)  // arg stack now: [... 10VAL SIGCHECKCONTRACT]
 
 	MergePayment = fmt.Sprintf(`
 	{'C',
