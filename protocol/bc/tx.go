@@ -240,7 +240,7 @@ func (tx *Tx) entryHook(vm *txvm.VM) {
 //
 // The only errors returned are those from w.
 func (tx *Tx) WriteWitnessCommitmentTo(w io.Writer) (int, error) {
-	// See $CHAIN/docs/future/protocol/specifications/blockchain.md#transaction-witness-commitment
+	// See $I10R/docs/future/protocol/specifications/blockchain.md#transaction-witness-commitment
 	// for the definition of the transaction witness commitment.
 	n, err := tx.ID.WriteTo(w)
 	if err != nil {
@@ -255,9 +255,9 @@ func (tx *Tx) WriteWitnessCommitmentTo(w io.Writer) (int, error) {
 
 // The only errors returned are those from w.
 func (tx *Tx) writeWitnessHashTo(w io.Writer) (int, error) {
-	// See $CHAIN/docs/future/protocol/specifications/txvm.md#transaction-witness
+	// See $I10R/docs/future/protocol/specifications/txvm.md#transaction-witness
 	// for the definition of the transaction witness and
-	// $CHAIN/docs/future/protocol/specifications/blockchain.md#transaction-witness-commitment
+	// $I10R/docs/future/protocol/specifications/blockchain.md#transaction-witness-commitment
 	// for the definition of the transaction witness commitment.
 	h := txvm.VMHash("WitnessHash", txvm.Encode(txvm.Tuple{
 		txvm.Int(tx.Version),
