@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 
-	"github.com/chain/txvm/crypto/ed25519/internal/edwards25519"
+	"i10r.io/crypto/ed25519/internal/edwards25519"
 )
 
 // Scalar is a 256-bit little-endian scalar.

@@ -5,7 +5,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/chain/txvm/errors"
+	"i10r.io/errors"
 )
 
 type scanner struct {

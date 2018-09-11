@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/math/checked"
+	"i10r.io/errors"
+	"i10r.io/math/checked"
 )
 
 var (

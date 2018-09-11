@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/chain/txvm/crypto/ed25519/internal/edwards25519"
+	"i10r.io/crypto/ed25519/internal/edwards25519"
 )
 
 // Bytes returns binary representation of a EC point (32-byte slice)

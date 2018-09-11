@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/math/checked"
-	"github.com/chain/txvm/protocol/bc"
-	"github.com/chain/txvm/protocol/merkle"
-	"github.com/chain/txvm/protocol/state"
+	"i10r.io/errors"
+	"i10r.io/math/checked"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/merkle"
+	"i10r.io/protocol/state"
 )
 
 // Some defaults.

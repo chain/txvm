@@ -1,9 +1,9 @@
 package txvm
 
 import (
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/math/checked"
-	"github.com/chain/txvm/protocol/txvm/op"
+	"i10r.io/errors"
+	"i10r.io/math/checked"
+	"i10r.io/protocol/txvm/op"
 )
 
 //go:generate go run gen.go

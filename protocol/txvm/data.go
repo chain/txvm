@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/chain/txvm/errors"
+	"i10r.io/errors"
 )
 
 // ErrInt is returned when int is called on a byte string

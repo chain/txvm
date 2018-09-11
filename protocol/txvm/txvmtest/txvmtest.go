@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/chain/txvm/crypto/ed25519"
-	"github.com/chain/txvm/protocol/txvm"
-	"github.com/chain/txvm/protocol/txvm/asm"
+	"i10r.io/crypto/ed25519"
+	"i10r.io/protocol/txvm"
+	"i10r.io/protocol/txvm/asm"
 )
 
 // sample transactions

@@ -8,11 +8,11 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/chain/txvm/protocol/txvm"
-	"github.com/chain/txvm/protocol/txvm/asm"
-	"github.com/chain/txvm/protocol/txvm/op"
-	"github.com/chain/txvm/protocol/txvm/txvmtest"
-	"github.com/chain/txvm/testutil"
+	"i10r.io/protocol/txvm"
+	"i10r.io/protocol/txvm/asm"
+	"i10r.io/protocol/txvm/op"
+	"i10r.io/protocol/txvm/txvmtest"
+	"i10r.io/testutil"
 )
 
 func TestNewTx(t *testing.T) {

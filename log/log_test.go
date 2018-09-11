@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chain/txvm/errors"
+	"i10r.io/errors"
 )
 
 func TestSetOutput(t *testing.T) {
@@ -298,8 +298,8 @@ func TestHelperStack(t *testing.T) {
 	got := string(read)
 	doNotWant := []string{
 		"log.go:",
-		"chain/log.Printkv",
-		"chain/log.Error",
+		"i10r.io/log.Printkv",
+		"i10r.io/log.Error",
 	}
 
 	t.Logf("output:\n%s", got)

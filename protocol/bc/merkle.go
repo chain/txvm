@@ -3,7 +3,7 @@ package bc
 import (
 	"bytes"
 
-	"github.com/chain/txvm/protocol/merkle"
+	"i10r.io/protocol/merkle"
 )
 
 // TxMerkleRoot creates a merkle tree from a slice of Transactions and

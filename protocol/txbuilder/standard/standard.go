@@ -3,9 +3,9 @@
 package standard
 
 import (
-	"github.com/chain/txvm/protocol/txvm/asm"
-	"github.com/chain/txvm/protocol/txvm/op"
-	"github.com/chain/txvm/protocol/txvm/txvmutil"
+	"i10r.io/protocol/txvm/asm"
+	"i10r.io/protocol/txvm/op"
+	"i10r.io/protocol/txvm/txvmutil"
 )
 
 // VerifyTxID returns a program that verifies the txid matches the

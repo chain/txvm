@@ -1,6 +1,6 @@
 package txvm
 
-import "github.com/chain/txvm/errors"
+import "i10r.io/errors"
 
 // ErrSliceRange is returned when slice is called with
 // a range that is invalid.

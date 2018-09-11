@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/chain/txvm/protocol/txvm"
-	"github.com/chain/txvm/protocol/txvm/op"
+	"i10r.io/protocol/txvm"
+	"i10r.io/protocol/txvm/op"
 )
 
 func newBuilder() *Builder {

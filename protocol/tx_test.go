@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chain/txvm/protocol/bc"
+	"i10r.io/protocol/bc"
 )
 
 func TestBadMaxNonceWindow(t *testing.T) {

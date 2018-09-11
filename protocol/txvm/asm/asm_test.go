@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/chain/txvm/protocol/txvm/op"
+	"i10r.io/protocol/txvm/op"
 )
 
 func TestAssembler(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/protocol/txvm"
-	"github.com/chain/txvm/protocol/txvm/op"
+	"i10r.io/errors"
+	"i10r.io/protocol/txvm"
+	"i10r.io/protocol/txvm/op"
 )
 
 // Tx contains the input to an instance of the txvm virtual machine,

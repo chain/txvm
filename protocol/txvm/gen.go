@@ -19,7 +19,7 @@ func main() {
 	out, err := os.Create(opgenName)
 	must(err)
 	fmt.Fprint(out, "// Auto-generated from op/op.go by gen.go\n\npackage txvm\n\n")
-	fmt.Fprintln(out, `import "chain/protocol/txvm/op"`)
+	fmt.Fprintln(out, `import "i10r.io/protocol/txvm/op"`)
 
 	fmt.Fprint(out, "var opFuncs [256]func(*VM)\n\n")
 

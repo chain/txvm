@@ -81,10 +81,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/log"
-	"github.com/chain/txvm/protocol/bc"
-	"github.com/chain/txvm/protocol/state"
+	"i10r.io/errors"
+	"i10r.io/log"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/state"
 )
 
 const defaultBlocksPerSnapshot = uint64(100)

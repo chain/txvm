@@ -1,8 +1,8 @@
 package txvm
 
 import (
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/protocol/merkle"
+	"i10r.io/errors"
+	"i10r.io/protocol/merkle"
 )
 
 // ErrUnfinalized is returned when txid is called before finalize.

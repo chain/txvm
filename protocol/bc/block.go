@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/protocol/txvm"
+	"i10r.io/errors"
+	"i10r.io/protocol/txvm"
 )
 
 // UnsignedBlock describes a block with its transactions but no signatures

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/chain/txvm/protocol/txvm/asm"
+	"i10r.io/protocol/txvm/asm"
 )
 
 func main() {

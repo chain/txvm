@@ -5,8 +5,8 @@ import (
 	"errors"
 	"math"
 
-	"github.com/chain/txvm/crypto/sha3"
-	"github.com/chain/txvm/crypto/sha3pool"
+	"i10r.io/crypto/sha3"
+	"i10r.io/crypto/sha3pool"
 )
 
 var (

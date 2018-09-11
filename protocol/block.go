@@ -6,12 +6,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/chain/txvm/crypto/ed25519"
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/log"
-	"github.com/chain/txvm/protocol/bc"
-	"github.com/chain/txvm/protocol/patricia"
-	"github.com/chain/txvm/protocol/state"
+	"i10r.io/crypto/ed25519"
+	"i10r.io/errors"
+	"i10r.io/log"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/patricia"
+	"i10r.io/protocol/state"
 )
 
 var (

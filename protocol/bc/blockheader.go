@@ -5,8 +5,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/protocol/txvm"
+	"i10r.io/errors"
+	"i10r.io/protocol/txvm"
 )
 
 // Hash computes the unique Chain protocol hash of the BlockHeader.

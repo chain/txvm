@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/chain/txvm/protocol/bc"
-	"github.com/chain/txvm/protocol/state"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/state"
 )
 
 // MemStore satisfies the Store interface.

@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	"github.com/chain/txvm/crypto/ed25519"
-	"github.com/chain/txvm/crypto/ed25519/chainkd"
+	"i10r.io/crypto/ed25519"
+	"i10r.io/crypto/ed25519/chainkd"
 
 	miscreant "github.com/miscreant/miscreant/go"
 )

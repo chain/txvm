@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/chain/txvm/crypto/sha3"
+	"i10r.io/crypto/sha3"
 )
 
 // EmptyStringHash is the hash of the empty string.

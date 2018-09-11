@@ -3,7 +3,7 @@ package txvm
 import (
 	"fmt"
 
-	"github.com/chain/txvm/errors"
+	"i10r.io/errors"
 )
 
 // Type codes for inspected entries and for log items.

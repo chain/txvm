@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/protocol/bc"
-	"github.com/chain/txvm/protocol/state"
+	"i10r.io/errors"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/state"
 )
 
 // Recover performs crash recovery, restoring the blockchain

@@ -3,8 +3,8 @@ package txvm
 import (
 	"testing"
 
-	"github.com/chain/txvm/protocol/txvm/op"
-	"github.com/chain/txvm/testutil"
+	"i10r.io/protocol/txvm/op"
+	"i10r.io/testutil"
 )
 
 func TestIntrospection(t *testing.T) {

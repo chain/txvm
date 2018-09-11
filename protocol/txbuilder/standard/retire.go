@@ -1,7 +1,7 @@
 package standard
 
 import (
-	"github.com/chain/txvm/protocol/txvm"
+	"i10r.io/protocol/txvm"
 )
 
 // expects [... refdata value] on the arg stack

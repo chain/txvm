@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/chain/txvm/testutil"
+	"i10r.io/testutil"
 )
 
 var filledBlock = &BlockHeader{

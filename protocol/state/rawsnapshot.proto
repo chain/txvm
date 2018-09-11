@@ -2,7 +2,7 @@ syntax = "proto3";
 option go_package = "state";
 package chain.protocol.state;
 
-import "chain/protocol/bc/bc.proto";
+import "i10r.io/protocol/bc/bc.proto";
 
 // Snapshot represents a snapshot of the blockchain, including the contracts
 // tree and issuance memory.

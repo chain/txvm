@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/chain/txvm/errors"
+	"i10r.io/errors"
 )
 
 // context key type

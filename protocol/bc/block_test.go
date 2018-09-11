@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chain/txvm/crypto/ed25519"
-	"github.com/chain/txvm/errors"
-	"github.com/chain/txvm/protocol/txvm/asm"
-	"github.com/chain/txvm/protocol/txvm/txvmtest"
-	"github.com/chain/txvm/testutil"
+	"i10r.io/crypto/ed25519"
+	"i10r.io/errors"
+	"i10r.io/protocol/txvm/asm"
+	"i10r.io/protocol/txvm/txvmtest"
+	"i10r.io/testutil"
 )
 
 var testBlockBytes = mustDecodeHex(

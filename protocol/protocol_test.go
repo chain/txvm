@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/chain/txvm/protocol/bc"
-	"github.com/chain/txvm/protocol/prottest/memstore"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/prottest/memstore"
 )
 
 func TestNewChainHeight(t *testing.T) {

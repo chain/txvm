@@ -4,7 +4,7 @@ package sha3pool
 import (
 	"sync"
 
-	"github.com/chain/txvm/crypto/sha3"
+	"i10r.io/crypto/sha3"
 )
 
 var pool = &sync.Pool{New: func() interface{} { return sha3.New256() }}

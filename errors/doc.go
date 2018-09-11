@@ -4,7 +4,7 @@ annotated with additional information without losing the original error.
 
 Example:
 
-	import "chain/errors"
+	import "i10r.io/errors"
 
 	func query() error {
 		err := pq.Exec("SELECT...")

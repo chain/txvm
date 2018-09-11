@@ -13,13 +13,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"github.com/chain/txvm/crypto/ed25519"
-	chainjson "github.com/chain/txvm/encoding/json"
-	"github.com/chain/txvm/protocol/bc"
-	"github.com/chain/txvm/protocol/txbuilder"
-	"github.com/chain/txvm/protocol/txbuilder/txresult"
-	"github.com/chain/txvm/protocol/txvm"
-	"github.com/chain/txvm/protocol/txvm/asm"
+	"i10r.io/crypto/ed25519"
+	chainjson "i10r.io/encoding/json"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/txbuilder"
+	"i10r.io/protocol/txbuilder/txresult"
+	"i10r.io/protocol/txvm"
+	"i10r.io/protocol/txvm/asm"
 )
 
 var args []string
