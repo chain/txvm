@@ -107,7 +107,10 @@ func opInt(vm *VM) {
 	if n <= 0 {
 		panic(errors.WithData(ErrInt, "int", a))
 	}
-	// Note: if res > math.MaxInt64, this will convert it to a negative
+	// Note 1: as of TxVM version 3 we do not check whether `n` equals `len(a)`,
+	// which allows `a` to contain arbitrary trailing data.
+	// Relying on this behavior is discouraged as we may forbid it in the future version of TxVM.
+	// Note 2: if res > math.MaxInt64, this will convert it to a negative
 	// number. This is intentional!
 	vm.push(Int(res))
 }

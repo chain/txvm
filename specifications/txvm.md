@@ -879,14 +879,20 @@ Note: Instructions `0x00` and `0x01` can be used to push
 _x_ **int** → _n_
 
 1. Pops a string `x` from the contract stack.
-2. Decodes it as a
+2. Decodes the prefix as a
    [LEB128](https://en.wikipedia.org/wiki/LEB128)-encoded unsigned
-   64-bit integer `u`.
+   64-bit integer `u`, ignoring any trailing bytes.
 3. Interprets the 64 bits of `u` as a signed two's complement 64-bit
    integer `n`.
 4. Pushes `n` to the contract stack.
 
 Fails execution when `x` is not a valid LEB128 encoding of an integer.
+
+Note: due to lack of clarity in the original specification and an accidental
+implementation, [transaction version 3](#versioning) allows integers to
+contain arbitrary trailing data after the valid LEB128 encoding.
+However, encoding integers with such trailing data is discouraged
+and may be forbidden in the future versions of TxVM.
 
 #### add
 
