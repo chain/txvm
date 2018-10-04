@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"i10r.io/sequence/protocol/bc"
-	"i10r.io/sequence/protocol/state"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/state"
 )
 
 func main() {

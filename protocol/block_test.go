@@ -1,0 +1,313 @@
+package protocol
+
+import (
+	"context"
+	"math"
+	"reflect"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/davecgh/go-spew/spew"
+
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/bc/bctest"
+	"i10r.io/protocol/patricia"
+	"i10r.io/protocol/prottest/memstore"
+	"i10r.io/protocol/state"
+	"i10r.io/testutil"
+)
+
+func TestGetBlock(t *testing.T) {
+	ctx := context.Background()
+
+	b1 := &bc.Block{UnsignedBlock: &bc.UnsignedBlock{BlockHeader: &bc.BlockHeader{Height: 1, NextPredicate: &bc.Predicate{}}}}
+	noBlocks := memstore.New()
+	oneBlock := memstore.New()
+	oneBlock.SaveBlock(ctx, b1)
+	snapshot := state.Empty()
+	snapshot.ApplyBlock(b1.UnsignedBlock)
+	oneBlock.SaveSnapshot(ctx, snapshot)
+
+	cases := []struct {
+		store   Store
+		want    *bc.Block
+		wantErr bool
+	}{
+		{noBlocks, nil, true},
+		{oneBlock, b1, false},
+	}
+
+	for _, test := range cases {
+		c, err := NewChain(ctx, b1, test.store, nil)
+		if err != nil {
+			testutil.FatalErr(t, err)
+		}
+		got, gotErr := c.GetBlock(ctx, c.Height())
+		if !testutil.DeepEqual(got, test.want) {
+			t.Errorf("got latest = %+v want %+v", got, test.want)
+		}
+		if (gotErr != nil) != test.wantErr {
+			t.Errorf("got latest err = %q want err?: %t", gotErr, test.wantErr)
+		}
+	}
+}
+
+func TestNoTimeTravel(t *testing.T) {
+	b1 := &bc.Block{UnsignedBlock: &bc.UnsignedBlock{BlockHeader: &bc.BlockHeader{Height: 1, NextPredicate: &bc.Predicate{}}}}
+	ctx := context.Background()
+	c, err := NewChain(ctx, b1, memstore.New(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c.setHeight(1)
+	c.setHeight(2)
+
+	c.setHeight(1) // don't go backward
+	if c.state.height != 2 {
+		t.Fatalf("c.state.height = %d want 2", c.state.height)
+	}
+}
+
+func TestGenerateBlock(t *testing.T) {
+	ctx := context.Background()
+	now := time.Unix(233400000, 0)
+	c, b1 := newTestChain(t, now)
+
+	txs := []*bc.Tx{
+		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.OutputType, ID: bc.NewHash([32]byte{2})}}},
+		{ID: bc.NewHash([32]byte{3}), Contracts: []bc.Contract{{Type: bc.OutputType, ID: bc.NewHash([32]byte{4})}}},
+	}
+
+	st := state.Empty()
+	err := st.ApplyBlock(b1.UnsignedBlock)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _, err := c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	if err != nil {
+		t.Fatalf("err got = %v want nil", err)
+	}
+
+	// TODO(bobg): verify these hashes are correct
+	wantTxRoot := mustDecodeHash("e437b69d1dd70254e165163415e69830b8cbf2eded94b79aa5de911e0691a89f")
+	wantContractsRoot := mustDecodeHash("5ff56d780f78809e63fb7be7fdbd7bf825704914311b4d0819c50d411f3b662d")
+	wantNoncesRoot := bc.NewHash(new(patricia.Tree).RootHash())
+
+	b1ID := b1.Hash()
+	want := &bc.UnsignedBlock{
+		BlockHeader: &bc.BlockHeader{
+			Version:          3,
+			Height:           2,
+			RefsCount:        1,
+			PreviousBlockId:  &b1ID,
+			TimestampMs:      bc.Millis(now) + 1,
+			TransactionsRoot: &wantTxRoot,
+			ContractsRoot:    &wantContractsRoot,
+			NoncesRoot:       &wantNoncesRoot,
+			NextPredicate:    b1.NextPredicate,
+		},
+		Transactions: txs,
+	}
+
+	if !testutil.DeepEqual(got, want) {
+		t.Errorf("generated block:\ngot:  %+v\nwant: %+v", got, want)
+	}
+
+	_, _, err = c.GenerateBlock(ctx, bc.Millis(now), nil)
+	if err == nil {
+		t.Error("expected error for bad generate timestamp")
+	}
+
+	for i := 0; i < maxBlockTxs+1; i++ {
+		txs = append(txs, bctest.EmptyTx(t, b1.Hash(), now.Add(time.Minute)))
+	}
+
+	got, _, err = c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(got.Transactions) != maxBlockTxs {
+		t.Errorf("expected block to have maximum number of txs, got %d", len(got.Transactions))
+	}
+
+	txs = []*bc.Tx{txs[0], txs[1]}
+	txs[0].Runlimit = 500
+	txs[1].Runlimit = math.MaxInt64
+
+	got, _, err = c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(got.Transactions) != 1 {
+		t.Errorf("expected block to have 1 tx due to runlimit, got %d", len(got.Transactions))
+	}
+
+	txs = []*bc.Tx{
+		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.InputType, ID: bc.NewHash([32]byte{2})}}},
+	}
+
+	got, _, err = c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(got.Transactions) != 0 {
+		t.Errorf("expected block to have no txs due to tx error, got %d", len(got.Transactions))
+	}
+}
+
+func TestCommitBlockIdempotence(t *testing.T) {
+	const numOfBlocks = 10
+	const concurrency = 5
+	ctx := context.Background()
+
+	now := time.Now()
+	c, b1 := newTestChain(t, now)
+
+	var blocks []*bc.Block
+	s := state.Empty()
+	s.ApplyBlock(b1.UnsignedBlock)
+	for i := 0; i < numOfBlocks; i++ {
+		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
+		newBlock, newSnapshot, err := c.GenerateBlock(ctx, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
+		if err != nil {
+			testutil.FatalErr(t, err)
+		}
+		sb, err := bc.SignBlock(newBlock, s.Header, nil)
+		if err != nil {
+			testutil.FatalErr(t, err)
+		}
+		err = c.CommitAppliedBlock(ctx, sb, newSnapshot)
+		if err != nil {
+			testutil.FatalErr(t, err)
+		}
+		blocks = append(blocks, sb)
+		s = newSnapshot
+	}
+	wantSnapshot := s
+
+	// Create a fresh Chain for the same blockchain / initial hash.
+	c, err := NewChain(ctx, b1, memstore.New(), nil)
+	if err != nil {
+		testutil.FatalErr(t, err)
+	}
+	c.bb.MaxNonceWindow = 48 * time.Hour
+	snapshot := state.Empty()
+	snapshot.ApplyBlock(b1.UnsignedBlock)
+	c.setState(snapshot)
+
+	// Apply all of the blocks concurrently in separate goroutines
+	// using CommitBlock. They should all succeed.
+	var wg sync.WaitGroup
+	wg.Add(concurrency)
+	for i := 0; i < concurrency; i++ {
+		go func() {
+			for j := 0; j < len(blocks); j++ {
+				err := c.CommitBlock(ctx, blocks[j])
+				if err != nil {
+					testutil.FatalErr(t, err)
+				}
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+
+	gotSnapshot := c.State()
+	if !reflect.DeepEqual(gotSnapshot, wantSnapshot) {
+		t.Errorf("got snapshot:\n%swant snapshot:\n%s", spew.Sdump(gotSnapshot), spew.Sdump(wantSnapshot))
+	}
+}
+
+func TestPersistSnapshot(t *testing.T) {
+	ctx := context.Background()
+
+	now := time.Now()
+	c, b1 := newTestChain(t, now)
+	c.blocksPerSnapshot = 50
+	numBlocks := int(c.blocksPerSnapshot) - 1 // minus initial block
+
+	s := state.Empty()
+	s.ApplyBlock(b1.UnsignedBlock)
+	appliedSnapshot := s
+
+	for i := 0; i < numBlocks; i++ {
+		tx := &bc.Tx{ID: bc.NewHash([32]byte{byte(i)})}
+		newBlock, snapshot, err := c.GenerateBlock(ctx, bc.Millis(now)+uint64(i+1), []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		sb, err := bc.SignBlock(newBlock, appliedSnapshot.Header, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = c.CommitBlock(ctx, sb)
+		if err != nil {
+			t.Fatal(err)
+		}
+		appliedSnapshot = snapshot
+	}
+	lastQueuedHeight := atomic.LoadUint64(&c.lastQueuedSnapshotHeight)
+	if lastQueuedHeight != c.Height() {
+		t.Fatalf("expected to create snapshot at height %d", c.Height())
+	}
+
+	// Snapshots are applied asynchronously. This loops waits
+	// until the snapshot is created.
+	for {
+		snap, _ := c.store.LatestSnapshot(context.Background())
+		if snap.Height() > 0 {
+			break
+		}
+	}
+	latestSnapshot, err := c.store.LatestSnapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(latestSnapshot, appliedSnapshot) {
+		t.Fatalf("from memstore, got snapshot\n%swant snapshot:\n%s", spew.Sdump(latestSnapshot), spew.Sdump(appliedSnapshot))
+	}
+}
+
+// newTestChain returns a new Chain using memstore for storage,
+// along with an initial block b1 (with a 0/0 multisig program).
+// It commits b1 before returning.
+func newTestChain(tb testing.TB, ts time.Time) (c *Chain, sb1 *bc.Block) {
+	ctx := context.Background()
+
+	var err error
+
+	b1, err := NewInitialBlock(nil, 0, ts)
+	if err != nil {
+		testutil.FatalErr(tb, err)
+	}
+	c, err = NewChain(ctx, b1, memstore.New(), nil)
+	if err != nil {
+		testutil.FatalErr(tb, err)
+	}
+	c.bb.MaxNonceWindow = 48 * time.Hour
+	c.bb.MaxBlockWindow = 100
+	st := state.Empty()
+	err = st.ApplyBlock(b1.UnsignedBlock)
+	if err != nil {
+		testutil.FatalErr(tb, err)
+	}
+	err = c.CommitAppliedBlock(ctx, b1, st)
+	if err != nil {
+		testutil.FatalErr(tb, err)
+	}
+	return c, b1
+}
+
+func mustDecodeHash(s string) (h bc.Hash) {
+	err := h.UnmarshalText([]byte(s))
+	if err != nil {
+		panic(err)
+	}
+	return h
+}

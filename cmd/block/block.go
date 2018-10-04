@@ -13,10 +13,10 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"i10r.io/crypto/ed25519"
-	"i10r.io/sequence/protocol"
-	"i10r.io/sequence/protocol/bc"
-	"i10r.io/sequence/protocol/state"
-	"i10r.io/sequence/protocol/validation"
+	"i10r.io/protocol"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/state"
+	"i10r.io/protocol/validation"
 )
 
 var modes = map[string]func([]string){

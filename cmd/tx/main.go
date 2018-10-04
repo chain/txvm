@@ -15,11 +15,11 @@ import (
 
 	"i10r.io/crypto/ed25519"
 	chainjson "i10r.io/encoding/json"
-	"i10r.io/sequence/protocol/bc"
-	"i10r.io/sequence/protocol/txbuilder"
-	"i10r.io/sequence/protocol/txbuilder/txresult"
-	"i10r.io/sequence/protocol/txvm"
-	"i10r.io/sequence/protocol/txvm/asm"
+	"i10r.io/protocol/bc"
+	"i10r.io/protocol/txbuilder"
+	"i10r.io/protocol/txbuilder/txresult"
+	"i10r.io/protocol/txvm"
+	"i10r.io/protocol/txvm/asm"
 )
 
 var args []string
