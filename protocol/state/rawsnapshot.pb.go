@@ -16,7 +16,7 @@ package state
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import bc "i10r.io/protocol/bc"
+import bc "github.com/chain/txvm/protocol/bc"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"i10r.io/protocol/txvm"
+	"github.com/chain/txvm/protocol/txvm"
 )
 
 func TestRunlimits(t *testing.T) {

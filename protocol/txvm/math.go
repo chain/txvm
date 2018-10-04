@@ -1,9 +1,9 @@
 package txvm
 
 import (
-	"i10r.io/errors"
-	"i10r.io/math/checked"
-	"i10r.io/protocol/txvm/op"
+	"github.com/chain/txvm/errors"
+	"github.com/chain/txvm/math/checked"
+	"github.com/chain/txvm/protocol/txvm/op"
 )
 
 func opAdd(vm *VM) {

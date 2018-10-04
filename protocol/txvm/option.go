@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"i10r.io/protocol/txvm/op"
+	"github.com/chain/txvm/protocol/txvm/op"
 )
 
 // Option is the type of a function that can be passed as an option to

@@ -2,7 +2,7 @@
 
 package txvm
 
-import "i10r.io/protocol/txvm/op"
+import "github.com/chain/txvm/protocol/txvm/op"
 
 var opFuncs [256]func(*VM)
 

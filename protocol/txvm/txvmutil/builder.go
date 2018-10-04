@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"math"
 
-	"i10r.io/protocol/txvm/op"
+	"github.com/chain/txvm/protocol/txvm/op"
 )
 
 // Builder helps programmatically build txvm programs.

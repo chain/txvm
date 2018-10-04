@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"i10r.io/protocol/bc"
+	"github.com/chain/txvm/protocol/bc"
 )
 
 func empty(t *testing.T) *Snapshot {

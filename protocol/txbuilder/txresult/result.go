@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"sync"
 
-	"i10r.io/crypto/ed25519"
-	"i10r.io/protocol/bc"
-	"i10r.io/protocol/txbuilder/standard"
-	"i10r.io/protocol/txvm"
+	"github.com/chain/txvm/crypto/ed25519"
+	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/txbuilder/standard"
+	"github.com/chain/txvm/protocol/txvm"
 )
 
 // Result is a container for information that can be parsed from the

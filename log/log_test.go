@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"i10r.io/errors"
+	"github.com/chain/txvm/errors"
 )
 
 func TestSetOutput(t *testing.T) {

@@ -1,7 +1,7 @@
 package txvm
 
 import (
-	"i10r.io/errors"
+	"github.com/chain/txvm/errors"
 )
 
 type stack []Item

@@ -11,8 +11,8 @@ import (
 	"testing"
 	"testing/quick"
 
-	"i10r.io/crypto/sha3"
-	"i10r.io/testutil"
+	"github.com/chain/txvm/crypto/sha3"
+	"github.com/chain/txvm/testutil"
 )
 
 func BenchmarkSingleInsert(b *testing.B) {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"i10r.io/errors"
+	"github.com/chain/txvm/errors"
 )
 
 var wd, _ = os.Getwd()

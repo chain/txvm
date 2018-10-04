@@ -7,8 +7,8 @@ import (
 
 	"math"
 
-	"i10r.io/errors"
-	"i10r.io/protocol/txvm/op"
+	"github.com/chain/txvm/errors"
+	"github.com/chain/txvm/protocol/txvm/op"
 )
 
 func TestSimpleOpcodes(t *testing.T) {

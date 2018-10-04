@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"i10r.io/protocol/bc"
-	"i10r.io/protocol/state"
+	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/state"
 )
 
 func main() {

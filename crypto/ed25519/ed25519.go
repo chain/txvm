@@ -22,7 +22,7 @@ import (
 	"io"
 	"strconv"
 
-	"i10r.io/crypto/ed25519/internal/edwards25519"
+	"github.com/chain/txvm/crypto/ed25519/internal/edwards25519"
 )
 
 const (

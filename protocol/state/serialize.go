@@ -3,8 +3,8 @@ package state
 import (
 	"github.com/golang/protobuf/proto"
 
-	"i10r.io/errors"
-	"i10r.io/protocol/patricia"
+	"github.com/chain/txvm/errors"
+	"github.com/chain/txvm/protocol/patricia"
 )
 
 func (s *Snapshot) FromBytes(b []byte) error {

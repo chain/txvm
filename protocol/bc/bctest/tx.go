@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"i10r.io/protocol/bc"
-	"i10r.io/protocol/txvm/asm"
-	"i10r.io/testutil"
+	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/txvm/asm"
+	"github.com/chain/txvm/testutil"
 )
 
 // EmptyTx produces a minimal valid transaction from "nonce" and

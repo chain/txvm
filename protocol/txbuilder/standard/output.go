@@ -3,7 +3,7 @@ package standard
 import (
 	"fmt"
 
-	"i10r.io/protocol/txvm"
+	"github.com/chain/txvm/protocol/txvm"
 )
 
 // payToMultisigProg1 expects:

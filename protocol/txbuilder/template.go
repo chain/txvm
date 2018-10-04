@@ -7,15 +7,15 @@ import (
 	"sort"
 	"time"
 
-	"i10r.io/crypto/ed25519"
-	chainjson "i10r.io/encoding/json"
-	"i10r.io/errors"
-	"i10r.io/math/checked"
-	"i10r.io/protocol/bc"
-	"i10r.io/protocol/txbuilder/standard"
-	"i10r.io/protocol/txvm"
-	"i10r.io/protocol/txvm/op"
-	"i10r.io/protocol/txvm/txvmutil"
+	"github.com/chain/txvm/crypto/ed25519"
+	chainjson "github.com/chain/txvm/encoding/json"
+	"github.com/chain/txvm/errors"
+	"github.com/chain/txvm/math/checked"
+	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/txbuilder/standard"
+	"github.com/chain/txvm/protocol/txvm"
+	"github.com/chain/txvm/protocol/txvm/op"
+	"github.com/chain/txvm/protocol/txvm/txvmutil"
 )
 
 const latestOutputVersion = 2

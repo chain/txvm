@@ -1,6 +1,6 @@
 package txvm
 
-import "i10r.io/errors"
+import "github.com/chain/txvm/errors"
 
 // ErrFinalized is returned when an op that logs an item
 // is called after finalize has been called.

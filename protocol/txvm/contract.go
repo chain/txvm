@@ -3,7 +3,7 @@ package txvm
 import (
 	"fmt"
 
-	"i10r.io/errors"
+	"github.com/chain/txvm/errors"
 )
 
 var (

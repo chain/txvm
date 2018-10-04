@@ -1,6 +1,6 @@
 package errors_test
 
-import "i10r.io/errors"
+import "github.com/chain/txvm/errors"
 
 var ErrInvalidKey = errors.New("invalid key")
 

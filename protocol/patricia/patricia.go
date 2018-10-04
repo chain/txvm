@@ -23,8 +23,8 @@ import (
 	"bytes"
 	"io"
 
-	"i10r.io/crypto/sha3pool"
-	"i10r.io/errors"
+	"github.com/chain/txvm/crypto/sha3pool"
+	"github.com/chain/txvm/errors"
 )
 
 var (

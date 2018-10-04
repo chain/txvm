@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"i10r.io/protocol/bc"
-	"i10r.io/protocol/prottest/memstore"
-	"i10r.io/protocol/state"
-	"i10r.io/testutil"
+	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/prottest/memstore"
+	"github.com/chain/txvm/protocol/state"
+	"github.com/chain/txvm/testutil"
 )
 
 func TestRecoverSnapshotNoAdditionalBlocks(t *testing.T) {

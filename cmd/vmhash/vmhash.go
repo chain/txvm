@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"i10r.io/protocol/txvm"
+	"github.com/chain/txvm/protocol/txvm"
 )
 
 func main() {

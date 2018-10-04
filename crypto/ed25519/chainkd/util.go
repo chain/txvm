@@ -3,7 +3,7 @@ package chainkd
 import (
 	"io"
 
-	"i10r.io/crypto/ed25519"
+	"github.com/chain/txvm/crypto/ed25519"
 )
 
 // Utility functions

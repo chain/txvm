@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	chainjson "i10r.io/encoding/json"
+	chainjson "github.com/chain/txvm/encoding/json"
 )
 
 // UnmarshalJSON satisfies the json.Unmarshaler interface.

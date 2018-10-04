@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"i10r.io/crypto/ed25519"
+	"github.com/chain/txvm/crypto/ed25519"
 )
 
 func main() {

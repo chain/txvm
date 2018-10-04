@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"i10r.io/crypto/ed25519"
-	"i10r.io/protocol"
-	"i10r.io/protocol/bc"
-	"i10r.io/protocol/prottest/memstore"
-	"i10r.io/protocol/state"
-	"i10r.io/testutil"
+	"github.com/chain/txvm/crypto/ed25519"
+	"github.com/chain/txvm/protocol"
+	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/prottest/memstore"
+	"github.com/chain/txvm/protocol/state"
+	"github.com/chain/txvm/testutil"
 )
 
 var (

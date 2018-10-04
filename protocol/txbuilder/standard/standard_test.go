@@ -5,10 +5,10 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"i10r.io/crypto/ed25519"
-	"i10r.io/protocol/bc"
-	"i10r.io/protocol/txvm/txvmutil"
-	"i10r.io/testutil"
+	"github.com/chain/txvm/crypto/ed25519"
+	"github.com/chain/txvm/protocol/bc"
+	"github.com/chain/txvm/protocol/txvm/txvmutil"
+	"github.com/chain/txvm/testutil"
 )
 
 // TestSeeds ensures we don't change our standard contracts without
