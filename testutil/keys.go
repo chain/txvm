@@ -1,10 +1,10 @@
 package testutil
 
 import (
+	miscreant "github.com/miscreant/miscreant/go"
+
 	"github.com/chain/txvm/crypto/ed25519"
 	"github.com/chain/txvm/crypto/ed25519/chainkd"
-
-	miscreant "github.com/miscreant/miscreant/go"
 )
 
 var (

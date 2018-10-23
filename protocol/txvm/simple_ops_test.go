@@ -3,9 +3,8 @@ package txvm
 import (
 	"bytes"
 	"encoding/hex"
-	"testing"
-
 	"math"
+	"testing"
 
 	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/protocol/txvm/op"

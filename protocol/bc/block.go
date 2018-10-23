@@ -4,9 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/hex"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/golang/protobuf/proto"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/protocol/txvm"
