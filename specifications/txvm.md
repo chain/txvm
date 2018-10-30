@@ -987,7 +987,7 @@ _x f_ **vmhash** → _h_
 _x_ **sha256** → _h_
 
 1. Pops a string `x` from the contract stack.
-2. [Creates string](#string-cost) `h` by computing SHA2-256: `h = SHA2-256(f,x)`.
+2. [Creates string](#string-cost) `h` by computing SHA2-256: `h = SHA2-256(x)`.
 3. Pushes the resulting string `h` to the contract stack.
 
 #### sha3
@@ -995,7 +995,7 @@ _x_ **sha256** → _h_
 _x_ **sha3** → _h_
 
 1. Pops a string `x` from the contract stack.
-2. [Creates string](#string-cost) `h` by computing SHA3-256: `h = SHA3(f,x)`.
+2. [Creates string](#string-cost) `h` by computing SHA3-256: `h = SHA3(x)`.
 3. Pushes the resulting string `h` to the contract stack.
 
 #### checksig

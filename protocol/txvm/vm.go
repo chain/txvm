@@ -95,7 +95,7 @@ var (
 
 // Validate is the main entrypoint to txvm. It runs the given program,
 // producing its transaction ID if it gets as far as a "finalize"
-// instruction. Other runtmie information can be inspected via
+// instruction. Other runtime information can be inspected via
 // callbacks, which are supplied via the Option arguments.
 func Validate(prog []byte, txVersion, runlimit int64, o ...Option) (*VM, error) {
 	if txVersion < 3 {
