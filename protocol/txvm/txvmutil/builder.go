@@ -19,7 +19,7 @@ type Builder struct {
 }
 
 // TODO(jackson): Can we make this builder more ergonomic?
-// https://github.com/chain/chainfork/pull/2790#issuecomment-373210076
+// https://github.com/interstellar/i10r/pull/2790#issuecomment-373210076
 
 // Build returns the assembled txvm program.
 func (b *Builder) Build() []byte {
