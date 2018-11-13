@@ -14,7 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"github.com/chain/txvm/crypto/ed25519"
-	chainjson "github.com/chain/txvm/encoding/json"
+	i10rjson "github.com/chain/txvm/encoding/json"
 	"github.com/chain/txvm/protocol/bc"
 	"github.com/chain/txvm/protocol/txbuilder"
 	"github.com/chain/txvm/protocol/txbuilder/txresult"
@@ -136,7 +136,7 @@ func main() {
 		args = txfs.Args()
 		var txtags []byte
 		if len(txtagsStr) > 0 {
-			var m chainjson.Map
+			var m i10rjson.Map
 			err = m.UnmarshalJSON([]byte(txtagsStr))
 			if err == nil {
 				txtags, _ = m.MarshalJSON()
@@ -183,7 +183,7 @@ func main() {
 				args = fs.Args()
 				var refdata []byte
 				if len(refdataStr) > 0 {
-					var m chainjson.Map
+					var m i10rjson.Map
 					err = m.UnmarshalJSON([]byte(refdataStr))
 					if err == nil {
 						refdata, _ = m.MarshalJSON()
@@ -205,7 +205,7 @@ func main() {
 					must(err)
 				}
 				if len(assetTagStr) > 0 {
-					var m chainjson.Map
+					var m i10rjson.Map
 					err = m.UnmarshalJSON([]byte(assetTagStr))
 					if err == nil {
 						assetTag, _ = m.MarshalJSON()
@@ -251,7 +251,7 @@ func main() {
 				args = fs.Args()
 				var refdata []byte
 				if len(refdataStr) > 0 {
-					var m chainjson.Map
+					var m i10rjson.Map
 					err = m.UnmarshalJSON([]byte(refdataStr))
 					if err == nil {
 						refdata, _ = m.MarshalJSON()
@@ -302,7 +302,7 @@ func main() {
 				args = fs.Args()
 				var refdata []byte
 				if len(refdataStr) > 0 {
-					var m chainjson.Map
+					var m i10rjson.Map
 					err = m.UnmarshalJSON([]byte(refdataStr))
 					if err == nil {
 						refdata, _ = m.MarshalJSON()
@@ -325,7 +325,7 @@ func main() {
 				err = assetID.UnmarshalText([]byte(assetIDStr))
 				must(err)
 				if len(tagsStr) > 0 {
-					var m chainjson.Map
+					var m i10rjson.Map
 					err = m.UnmarshalJSON([]byte(tagsStr))
 					if err == nil {
 						tags, _ = m.MarshalJSON()
@@ -345,7 +345,7 @@ func main() {
 				args = fs.Args()
 				var refdata []byte
 				if len(refdataStr) > 0 {
-					var m chainjson.Map
+					var m i10rjson.Map
 					err = m.UnmarshalJSON([]byte(refdataStr))
 					if err == nil {
 						refdata, _ = m.MarshalJSON()

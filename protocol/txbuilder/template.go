@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/chain/txvm/crypto/ed25519"
-	chainjson "github.com/chain/txvm/encoding/json"
+	i10rjson "github.com/chain/txvm/encoding/json"
 	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/math/checked"
 	"github.com/chain/txvm/protocol/bc"
@@ -41,13 +41,13 @@ func NewTemplate(maxTime time.Time, tags []byte) *Template {
 // elements have been added, any needed signatures are added with
 // Sign. The completed transaction can be extracted with Tx.
 type Template struct {
-	Issuances   []*Issuance        `json:"issuances"`
-	Inputs      []*Input           `json:"inputs"`
-	Outputs     []*Output          `json:"outputs"`
-	Retirements []*Retirement      `json:"retirements"`
-	TxTags      chainjson.HexBytes `json:"transaction_tags"`
-	MinTimeMS   uint64             `json:"min_time_ms"`
-	MaxTimeMS   uint64             `json:"max_time_ms"`
+	Issuances   []*Issuance       `json:"issuances"`
+	Inputs      []*Input          `json:"inputs"`
+	Outputs     []*Output         `json:"outputs"`
+	Retirements []*Retirement     `json:"retirements"`
+	TxTags      i10rjson.HexBytes `json:"transaction_tags"`
+	MinTimeMS   uint64            `json:"min_time_ms"`
+	MaxTimeMS   uint64            `json:"max_time_ms"`
 
 	materialization *materialization
 
@@ -68,18 +68,18 @@ func (t *Template) SetOutputV1() {
 // Issuance contains information needed to add an issuance to a
 // transaction. It is added to a template with AddIssuance.
 type Issuance struct {
-	Version      int                  `json:"contract_version"`
-	BlockchainID chainjson.HexBytes   `json:"blockchain_id"`
-	Quorum       int                  `json:"quorum"`
-	KeyHashes    []chainjson.HexBytes `json:"key_hashes"`
-	Path         []chainjson.HexBytes `json:"derivation_path"`
-	Pubkeys      []ed25519.PublicKey  `json:"pubkeys"`
-	Amount       int64                `json:"amount"`
-	AssetTag     chainjson.HexBytes   `json:"asset_tag"` // TODO(bobg): name this something that won't be confused with the mutable asset tags we already have
-	Sigs         []chainjson.HexBytes `json:"signatures"`
-	Refdata      chainjson.HexBytes   `json:"reference_data"`
-	Index        uint64               `json:"index"`
-	Nonce        chainjson.HexBytes   `json:"nonce"`
+	Version      int                 `json:"contract_version"`
+	BlockchainID i10rjson.HexBytes   `json:"blockchain_id"`
+	Quorum       int                 `json:"quorum"`
+	KeyHashes    []i10rjson.HexBytes `json:"key_hashes"`
+	Path         []i10rjson.HexBytes `json:"derivation_path"`
+	Pubkeys      []ed25519.PublicKey `json:"pubkeys"`
+	Amount       int64               `json:"amount"`
+	AssetTag     i10rjson.HexBytes   `json:"asset_tag"` // TODO(bobg): name this something that won't be confused with the mutable asset tags we already have
+	Sigs         []i10rjson.HexBytes `json:"signatures"`
+	Refdata      i10rjson.HexBytes   `json:"reference_data"`
+	Index        uint64              `json:"index"`
+	Nonce        i10rjson.HexBytes   `json:"nonce"`
 	anchor       []byte
 }
 
@@ -90,18 +90,18 @@ func (iss *Issuance) assetID() [32]byte {
 // Input contains information needed to add an input to a
 // transaction. It is added to a template with AddInput.
 type Input struct {
-	Quorum        int                  `json:"quorum"`
-	KeyHashes     []chainjson.HexBytes `json:"key_hashes"`
-	Path          []chainjson.HexBytes `json:"derivation_path"`
-	Pubkeys       []ed25519.PublicKey  `json:"pubkeys"`
-	Amount        int64                `json:"amount"`
-	AssetID       bc.Hash              `json:"asset_id"`
-	Anchor        chainjson.HexBytes   `json:"anchor"`
-	Sigs          []chainjson.HexBytes `json:"signatures"`
-	InputRefdata  chainjson.HexBytes   `json:"reference_data"`
-	Index         uint64               `json:"index"`
-	OutputIndex   *int                 `json:"output_index,omitempty"` // for "spend from output" - will be blank for "normal" inputs
-	OutputVersion int                  `json:"output_version"`
+	Quorum        int                 `json:"quorum"`
+	KeyHashes     []i10rjson.HexBytes `json:"key_hashes"`
+	Path          []i10rjson.HexBytes `json:"derivation_path"`
+	Pubkeys       []ed25519.PublicKey `json:"pubkeys"`
+	Amount        int64               `json:"amount"`
+	AssetID       bc.Hash             `json:"asset_id"`
+	Anchor        i10rjson.HexBytes   `json:"anchor"`
+	Sigs          []i10rjson.HexBytes `json:"signatures"`
+	InputRefdata  i10rjson.HexBytes   `json:"reference_data"`
+	Index         uint64              `json:"index"`
+	OutputIndex   *int                `json:"output_index,omitempty"` // for "spend from output" - will be blank for "normal" inputs
+	OutputVersion int                 `json:"output_version"`
 }
 
 // Output contains information needed to add an output to a
@@ -111,8 +111,8 @@ type Output struct {
 	Pubkeys   []ed25519.PublicKey `json:"pubkeys"`
 	Amount    int64               `json:"amount"`
 	AssetID   bc.Hash             `json:"asset_id"`
-	Refdata   chainjson.HexBytes  `json:"reference_data"`
-	TokenTags chainjson.HexBytes  `json:"token_tags"`
+	Refdata   i10rjson.HexBytes   `json:"reference_data"`
+	TokenTags i10rjson.HexBytes   `json:"token_tags"`
 	Index     uint64              `json:"index"`
 	anchor    []byte
 }
@@ -120,10 +120,10 @@ type Output struct {
 // Retirement contains information needed to add a retirement to a
 // transaction. It is added to a template with AddRetirement.
 type Retirement struct {
-	Amount  int64              `json:"amount"`
-	AssetID bc.Hash            `json:"asset_id"`
-	Refdata chainjson.HexBytes `json:"reference_data"`
-	Index   uint64             `json:"index"`
+	Amount  int64             `json:"amount"`
+	AssetID bc.Hash           `json:"asset_id"`
+	Refdata i10rjson.HexBytes `json:"reference_data"`
+	Index   uint64            `json:"index"`
 }
 
 type entry interface {
@@ -203,15 +203,15 @@ func (tpl *Template) Commit() error {
 	return nil
 }
 
-func asHexBytes(b [][]byte) []chainjson.HexBytes {
-	var res []chainjson.HexBytes
+func asHexBytes(b [][]byte) []i10rjson.HexBytes {
+	var res []i10rjson.HexBytes
 	for _, item := range b {
 		res = append(res, item)
 	}
 	return res
 }
 
-func asBytes(b []chainjson.HexBytes) [][]byte {
+func asBytes(b []i10rjson.HexBytes) [][]byte {
 	var res [][]byte
 	for _, item := range b {
 		res = append(res, item)
@@ -230,7 +230,7 @@ func (tpl *Template) AddIssuance(version int, blockchainID []byte, assetTag []by
 		Pubkeys:      pubkeys,
 		Amount:       amount,
 		AssetTag:     assetTag,
-		Refdata:      chainjson.HexBytes(refData),
+		Refdata:      i10rjson.HexBytes(refData),
 		Nonce:        nonce,
 		Index:        tpl.index,
 	}
@@ -252,7 +252,7 @@ func (tpl *Template) AddInput(quorum int, keyHashes [][]byte, path [][]byte, pub
 		Amount:        amount,
 		AssetID:       assetID,
 		Anchor:        anchor,
-		InputRefdata:  chainjson.HexBytes(inputRefdata),
+		InputRefdata:  i10rjson.HexBytes(inputRefdata),
 		Index:         tpl.index,
 		OutputVersion: version,
 	}
@@ -268,8 +268,8 @@ func (tpl *Template) AddOutput(quorum int, pubkeys []ed25519.PublicKey, amount i
 		Pubkeys:   pubkeys,
 		Amount:    amount,
 		AssetID:   assetID,
-		Refdata:   chainjson.HexBytes(refData),
-		TokenTags: chainjson.HexBytes(tags),
+		Refdata:   i10rjson.HexBytes(refData),
+		TokenTags: i10rjson.HexBytes(tags),
 		Index:     tpl.index,
 	}
 	tpl.index++
@@ -282,7 +282,7 @@ func (tpl *Template) AddRetirement(amount int64, assetID bc.Hash, refData []byte
 	ret := &Retirement{
 		Amount:  amount,
 		AssetID: assetID,
-		Refdata: chainjson.HexBytes(refData),
+		Refdata: i10rjson.HexBytes(refData),
 		Index:   tpl.index,
 	}
 	tpl.index++
@@ -309,9 +309,9 @@ func (tpl *Template) Sign(ctx context.Context, signFn SignFunc) error {
 	}
 
 	txidProg := standard.VerifyTxID(txID.Byte32())
-	callSign := func(quorum int, keyIDs [][]byte, inPath []chainjson.HexBytes, anchor []byte, sigs *[]chainjson.HexBytes) error {
+	callSign := func(quorum int, keyIDs [][]byte, inPath []i10rjson.HexBytes, anchor []byte, sigs *[]i10rjson.HexBytes) error {
 		if *sigs == nil {
-			*sigs = make([]chainjson.HexBytes, len(keyIDs))
+			*sigs = make([]i10rjson.HexBytes, len(keyIDs))
 		}
 
 		// Have we already reached a quorum?
@@ -371,7 +371,7 @@ type stackItem struct {
 
 	// signature checks
 	pubkeys []ed25519.PublicKey
-	sigs    *[]chainjson.HexBytes
+	sigs    *[]i10rjson.HexBytes
 }
 
 var (
