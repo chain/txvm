@@ -77,8 +77,8 @@ func TestGenerateBlock(t *testing.T) {
 	c, b1 := newTestChain(t, now)
 
 	txs := []*bc.Tx{
-		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.OutputType, ID: bc.NewHash([32]byte{2})}}},
-		{ID: bc.NewHash([32]byte{3}), Contracts: []bc.Contract{{Type: bc.OutputType, ID: bc.NewHash([32]byte{4})}}},
+		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.OutputType, ID: bc.NewHash([32]byte{2})}}, Finalized: true},
+		{ID: bc.NewHash([32]byte{3}), Contracts: []bc.Contract{{Type: bc.OutputType, ID: bc.NewHash([32]byte{4})}}, Finalized: true},
 	}
 
 	st := state.Empty()
@@ -148,7 +148,7 @@ func TestGenerateBlock(t *testing.T) {
 	}
 
 	txs = []*bc.Tx{
-		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.InputType, ID: bc.NewHash([32]byte{2})}}},
+		{ID: bc.NewHash([32]byte{1}), Contracts: []bc.Contract{{Type: bc.InputType, ID: bc.NewHash([32]byte{2})}}, Finalized: true},
 	}
 
 	got, _, err = c.GenerateBlock(ctx, bc.Millis(now)+1, bctest.WithCommitments(txs))

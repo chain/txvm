@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/chain/txvm/errors"
 	"github.com/chain/txvm/protocol/bc"
 )
 
@@ -29,7 +30,10 @@ func TestApplyTxSpend(t *testing.T) {
 	spentOutputID := bc.NewHash([32]byte{1})
 	snap.ContractsTree.Insert(spentOutputID.Bytes())
 
-	tx := &bc.Tx{Contracts: []bc.Contract{{Type: bc.InputType, ID: spentOutputID}}}
+	tx := &bc.Tx{
+		Contracts: []bc.Contract{{Type: bc.InputType, ID: spentOutputID}},
+		Finalized: true,
+	}
 
 	// Apply the spend transaction.
 	err := snap.ApplyTx(bc.NewCommitmentsTx(tx))
@@ -48,7 +52,8 @@ func TestApplyTxSpend(t *testing.T) {
 func TestApplyIssuanceTwice(t *testing.T) {
 	snap := empty(t)
 	issuance := &bc.Tx{
-		Nonces: []bc.Nonce{{ID: bc.NewHash([32]byte{2}), ExpMS: 5}},
+		Nonces:    []bc.Nonce{{ID: bc.NewHash([32]byte{2}), ExpMS: 5}},
+		Finalized: true,
 	}
 	err := snap.ApplyTx(bc.NewCommitmentsTx(issuance))
 	if err != nil {
@@ -137,11 +142,17 @@ func TestApplyTx(t *testing.T) {
 	snap := Empty()
 
 	err := snap.ApplyTx(bc.NewCommitmentsTx(tx))
-	if err == nil {
-		t.Error("expected uninitialized error")
+	if errors.Root(err) != ErrEmptyState {
+		t.Errorf("got %v, want %s", err, ErrEmptyState)
 	}
 
 	snap = empty(t)
+	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
+	if errors.Root(err) != ErrUnfinalized {
+		t.Errorf("got %v, want %s", err, ErrUnfinalized)
+	}
+
+	tx.Finalized = true // lies
 	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err != nil {
 		t.Fatal(err)
@@ -166,6 +177,7 @@ func TestRefIDNonce(t *testing.T) {
 			BlockID: b1.Hash(),
 			ExpMS:   10000,
 		}},
+		Finalized: true,
 	}
 	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err != nil {
@@ -178,6 +190,7 @@ func TestRefIDNonce(t *testing.T) {
 			BlockID: bc.NewHash([32]byte{255}),
 			ExpMS:   10000,
 		}},
+		Finalized: true,
 	}
 	err = snap.ApplyTx(bc.NewCommitmentsTx(tx))
 	if err == nil {

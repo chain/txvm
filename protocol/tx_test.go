@@ -14,7 +14,8 @@ func TestBadMaxNonceWindow(t *testing.T) {
 	c.bb.MaxNonceWindow = time.Second
 
 	tx := &bc.Tx{
-		Nonces: []bc.Nonce{{ExpMS: bc.Millis(time.Now().Add(5 * time.Second))}},
+		Nonces:    []bc.Nonce{{ExpMS: bc.Millis(time.Now().Add(5 * time.Second))}},
+		Finalized: true,
 	}
 
 	got, _, err := c.GenerateBlock(ctx, b1.TimestampMs+1, []*bc.CommitmentsTx{bc.NewCommitmentsTx(tx)})
