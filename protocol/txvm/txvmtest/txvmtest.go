@@ -80,7 +80,7 @@ drop get # con: [QUORUM PUBKEYn PUBKEYn-1 ... PUBKEY1 N VALUE]
 
 var (
 	p2spSrc    = fmt.Sprintf(p2spSrcFmt, p2spUnlockSrc)
-	p2spUnlock = mustAssemble(p2spUnlockSrc)
+	p2spUnlock = asm.MustAssemble(p2spUnlockSrc)
 )
 
 var (
@@ -256,7 +256,7 @@ func payToTxid(txid [32]byte) string {
 }
 
 func addSig(src string, priv []byte) string {
-	prog := mustAssemble(src)
+	prog := asm.MustAssemble(src)
 	vm, err := txvm.Validate(prog, 3, 100000, txvm.StopAfterFinalize)
 	must(err)
 	if !vm.Finalized {
@@ -266,7 +266,7 @@ func addSig(src string, priv []byte) string {
 }
 
 func addPayToSig(src string, priv []byte) string {
-	prog := mustAssemble(src)
+	prog := asm.MustAssemble(src)
 	vm, err := txvm.Validate(prog, 3, 100000, txvm.StopAfterFinalize)
 	must(err)
 	if !vm.Finalized {
@@ -274,7 +274,7 @@ func addPayToSig(src string, priv []byte) string {
 	}
 
 	txidProgSrc := payToTxid(vm.TxID)
-	txidProg := mustAssemble(txidProgSrc)
+	txidProg := asm.MustAssemble(txidProgSrc)
 	sig := ed25519.Sign(priv, txidProg)
 
 	return src + fmt.Sprintf(" x'%x' put [%s] put call", sig, txidProgSrc)
@@ -290,10 +290,4 @@ func mustDecodeHex(hexstr string) []byte {
 	decoded, err := hex.DecodeString(hexstr)
 	must(err)
 	return decoded
-}
-
-func mustAssemble(src string) []byte {
-	res, err := asm.Assemble(src)
-	must(err)
-	return res
 }
