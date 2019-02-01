@@ -83,7 +83,8 @@ type Issuance struct {
 	anchor       []byte
 }
 
-func (iss *Issuance) assetID() [32]byte {
+// AssetID computes the asset ID of the issuance.
+func (iss *Issuance) AssetID() [32]byte {
 	return standard.AssetID(iss.Version, iss.Quorum, iss.Pubkeys, iss.AssetTag)
 }
 
@@ -520,7 +521,7 @@ func (tpl *Template) materializeTx() (*materialization, error) {
 			}
 			// arg stack: [... value sigcheck]
 			b.Op(op.Get).Op(op.Get) // get get
-			assetID := entry.assetID()
+			assetID := entry.AssetID()
 			stack = append(stack, stackItem{pubkeys: entry.Pubkeys, sigs: &entry.Sigs}, stackItem{amount: entry.Amount, assetID: bc.NewHash(assetID), anchor: entry.anchor})
 			err := ensureZeroval()
 			if err != nil {

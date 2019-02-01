@@ -33,3 +33,8 @@ func (vm *VM) StackItem(i int) Data {
 func (vm *VM) Seed() []byte {
 	return vm.contract.seed
 }
+
+// Program returns the program bytecode of the VM's current contract.
+func (vm *VM) Program() []byte {
+	return vm.run.prog
+}

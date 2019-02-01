@@ -41,6 +41,7 @@ type Output struct {
 	LogPos    uint64
 	OutputID  bc.Hash
 	Value     *Value
+	Quorum    int
 	Pubkeys   []ed25519.PublicKey
 	RefData   []byte
 	TokenTags []byte
@@ -53,13 +54,23 @@ type Input struct {
 	OutputID bc.Hash
 	Value    *Value
 	RefData  []byte
+	Quorum   int
+	Pubkeys  []ed25519.PublicKey
 }
 
 // Issuance contains information parsed from issuance records in a
 // transaction log.
 type Issuance struct {
-	Value   *Value
-	RefData []byte
+	Value           *Value
+	RefData         []byte
+	NonceCallerSeed []byte
+	NonceSelfSeed   []byte
+	NonceBlockID    []byte
+	NonceExpMS      int64
+	TimerangeMinMS  int64
+	TimerangeMaxMS  int64
+	Quorum          int
+	Pubkeys         []ed25519.PublicKey
 }
 
 // Retirement contains information parsed from retirement records in a
@@ -99,7 +110,7 @@ func New(tx *bc.Tx) *Result {
 				Anchor:  iss.Anchor,
 			},
 		}
-		addIssueMeta(rIss, tx, iss.LogPos)
+		addIssueMeta(rIss, iss, tx, iss.LogPos)
 		result.Issuances = append(result.Issuances, rIss)
 	}
 
@@ -158,24 +169,39 @@ func addOutputMeta(out *Output, txOut bc.Output, tx *bc.Tx, logPos int) {
 	if !ok {
 		return
 	}
-	refdata := refdataTuple[2].(txvm.Bytes)
+	out.RefData = refdataTuple[2].(txvm.Bytes)
 
-	val := txOut.Stack[len(txOut.Stack)-1].(txvm.Tuple)
+	quorumTuple := txOut.Stack[0].(txvm.Tuple)
+	if len(quorumTuple) != 2 {
+		return
+	}
+	if quorumTuple[0].(txvm.Bytes)[0] != txvm.IntCode {
+		return
+	}
+	out.Quorum = int(quorumTuple[1].(txvm.Int))
 
-	pubkeyBytes := txOut.Stack[len(txOut.Stack)-2].(txvm.Tuple)[1].(txvm.Tuple)
-	var pubkeys []ed25519.PublicKey
-	for _, pub := range pubkeyBytes {
-		pubkeys = append(pubkeys, ed25519.PublicKey(pub.(txvm.Bytes)))
+	pubkeyTupleTuple := txOut.Stack[1].(txvm.Tuple)
+	if len(pubkeyTupleTuple) != 2 {
+		return
+	}
+	if pubkeyTupleTuple[0].(txvm.Bytes)[0] != txvm.TupleCode {
+		return
+	}
+	pubkeyTuple := pubkeyTupleTuple[1].(txvm.Tuple)
+	for _, p := range pubkeyTuple {
+		if pubkey, ok := p.(txvm.Bytes); ok {
+			out.Pubkeys = append(out.Pubkeys, ed25519.PublicKey(pubkey))
+		} else {
+			return
+		}
 	}
 
+	val := txOut.Stack[2].(txvm.Tuple)
 	out.Value = &Value{
 		Amount:  uint64(val[1].(txvm.Int)),
 		AssetID: bc.HashFromBytes(val[2].(txvm.Bytes)),
 		Anchor:  val[3].(txvm.Bytes),
 	}
-
-	out.Pubkeys = pubkeys
-	out.RefData = refdata
 }
 
 func addInputMeta(input *Input, txIn bc.Input, tx *bc.Tx, logPos int) {
@@ -189,7 +215,33 @@ func addInputMeta(input *Input, txIn bc.Input, tx *bc.Tx, logPos int) {
 		return
 	}
 	spendRefdata := []byte(spendRefTuple[2].(txvm.Bytes))
-	val := txIn.Stack[len(txIn.Stack)-1].(txvm.Tuple)
+
+	quorumTuple := txIn.Stack[0].(txvm.Tuple)
+	if len(quorumTuple) != 2 {
+		return
+	}
+	if quorumTuple[0].(txvm.Bytes)[0] != txvm.IntCode {
+		return
+	}
+	input.Quorum = int(quorumTuple[1].(txvm.Int))
+
+	pubkeyTupleTuple := txIn.Stack[1].(txvm.Tuple)
+	if len(pubkeyTupleTuple) != 2 {
+		return
+	}
+	if pubkeyTupleTuple[0].(txvm.Bytes)[0] != txvm.TupleCode {
+		return
+	}
+	pubkeyTuple := pubkeyTupleTuple[1].(txvm.Tuple)
+	for _, p := range pubkeyTuple {
+		if pubkey, ok := p.(txvm.Bytes); ok {
+			input.Pubkeys = append(input.Pubkeys, ed25519.PublicKey(pubkey))
+		} else {
+			return
+		}
+	}
+
+	val := txIn.Stack[2].(txvm.Tuple)
 	input.Value = &Value{
 		Amount:  uint64(val[1].(txvm.Int)),
 		AssetID: bc.HashFromBytes(val[2].(txvm.Bytes)),
@@ -198,8 +250,24 @@ func addInputMeta(input *Input, txIn bc.Input, tx *bc.Tx, logPos int) {
 	input.RefData = spendRefdata
 }
 
-func addIssueMeta(issuance *Issuance, tx *bc.Tx, logPos int) {
-	if logPos+1 >= len(tx.Log) {
+func addIssueMeta(issuance *Issuance, txIss bc.Issuance, tx *bc.Tx, logPos int) {
+	if logPos < 2 || logPos+1 >= len(tx.Log) {
+		return
+	}
+
+	nonceTuple := tx.Log[logPos-2]
+	if len(nonceTuple) != 5 {
+		return
+	}
+	if nonceTuple[0].(txvm.Bytes)[0] != txvm.NonceCode {
+		return
+	}
+
+	timerangeTuple := tx.Log[logPos-1]
+	if len(timerangeTuple) != 4 {
+		return
+	}
+	if timerangeTuple[0].(txvm.Bytes)[0] != txvm.TimerangeCode {
 		return
 	}
 
@@ -212,9 +280,25 @@ func addIssueMeta(issuance *Issuance, tx *bc.Tx, logPos int) {
 			return
 		}
 	}
-	refdata := []byte(refdataTuple[2].(txvm.Bytes))
 
-	issuance.RefData = refdata
+	issuance.Quorum = int(txIss.Stack[0].(txvm.Tuple)[1].(txvm.Int))
+	pubkeyTupleTuple := txIss.Stack[1].(txvm.Tuple)
+	pubkeyTuple := pubkeyTupleTuple[1].(txvm.Tuple)
+	for _, p := range pubkeyTuple {
+		if pubkey, ok := p.(txvm.Bytes); ok {
+			issuance.Pubkeys = append(issuance.Pubkeys, ed25519.PublicKey(pubkey))
+		}
+	}
+
+	issuance.NonceCallerSeed = nonceTuple[1].(txvm.Bytes)
+	issuance.NonceSelfSeed = nonceTuple[2].(txvm.Bytes)
+	issuance.NonceBlockID = nonceTuple[3].(txvm.Bytes)
+	issuance.NonceExpMS = int64(nonceTuple[4].(txvm.Int))
+
+	issuance.TimerangeMinMS = int64(timerangeTuple[2].(txvm.Int))
+	issuance.TimerangeMaxMS = int64(timerangeTuple[3].(txvm.Int))
+
+	issuance.RefData = []byte(refdataTuple[2].(txvm.Bytes))
 }
 
 func addRetireMeta(retirement *Retirement, tx *bc.Tx, logPos int) {

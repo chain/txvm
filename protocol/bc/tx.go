@@ -85,6 +85,9 @@ type Input struct {
 
 // Issuance is a parsed issuance-typed txvm log entry.
 type Issuance struct {
+	Seed    Hash
+	Stack   []txvm.Data
+	Program []byte
 	Amount  int64
 	AssetID Hash
 	Anchor  []byte
@@ -153,6 +156,7 @@ func (tx *Tx) stackHook(vm *txvm.VM) {
 			Program: prog,
 			Stack:   stack,
 		})
+
 	case op.Input:
 		inputTup := vm.StackItem(vm.StackLen() - 1).(txvm.Tuple)[1].(txvm.Tuple)
 		seed := inputTup[1].(txvm.Bytes)
@@ -167,12 +171,27 @@ func (tx *Tx) stackHook(vm *txvm.VM) {
 			Program: prog,
 			Stack:   stack,
 		})
+
+	case op.Issue:
+		seed := vm.Seed()
+
+		var stack []txvm.Data
+		for i := 0; i < vm.StackLen(); i++ {
+			stack = append(stack, vm.StackItem(i))
+		}
+
+		iss := Issuance{
+			Seed:    HashFromBytes(seed),
+			Program: vm.Program(),
+			Stack:   stack,
+		}
+		tx.Issuances = append(tx.Issuances, iss)
 	}
 }
 
 func (tx *Tx) entryHook(vm *txvm.VM) {
 	tx.Version = vm.Version()
-	var inputIdx, outputIdx int
+	var inputIdx, outputIdx, issIdx int
 	for i, tup := range vm.Log {
 		tx.Log = append(tx.Log, tup)
 		tupType := tup[0].(txvm.Bytes) // log tuples always have a typecode
@@ -195,13 +214,12 @@ func (tx *Tx) entryHook(vm *txvm.VM) {
 			tx.Contracts = append(tx.Contracts, Contract{OutputType, id})
 
 		case txvm.IssueCode:
-			iss := Issuance{
-				Amount:  int64(tup[2].(txvm.Int)),
-				AssetID: HashFromBytes(tup[3].(txvm.Bytes)),
-				Anchor:  tup[4].(txvm.Bytes),
-				LogPos:  i,
-			}
-			tx.Issuances = append(tx.Issuances, iss)
+			iss := &tx.Issuances[issIdx]
+			iss.Amount = int64(tup[2].(txvm.Int))
+			iss.AssetID = HashFromBytes(tup[3].(txvm.Bytes))
+			iss.Anchor = tup[4].(txvm.Bytes)
+			iss.LogPos = i
+			issIdx++
 
 		case txvm.RetireCode:
 			ret := Retirement{

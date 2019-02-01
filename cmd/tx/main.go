@@ -73,12 +73,19 @@ func main() {
 			if i == 0 {
 				fmt.Println("Issuances:")
 			}
-			var refdata []byte
-			meta := result.Issuances[i]
-			if meta != nil {
-				refdata = meta.RefData
+			fmt.Printf("  assetID %x amount %d anchor %x", iss.AssetID.Bytes(), iss.Amount, iss.Anchor)
+			fmt.Printf(" seed %x program %x", iss.Seed.Bytes(), iss.Program)
+			if meta := result.Issuances[i]; meta != nil {
+				fmt.Printf(" refdata [%x] quorum %d pubkeys [", meta.RefData, meta.Quorum)
+				for i, p := range meta.Pubkeys {
+					if i > 0 {
+						fmt.Print(" ")
+					}
+					fmt.Printf("%x", []byte(p))
+				}
+				fmt.Print("]")
 			}
-			fmt.Printf("  assetID %x amount %d anchor %x refdata [%x]\n", iss.AssetID.Bytes(), iss.Amount, iss.Anchor, refdata)
+			fmt.Println()
 		}
 		for i, ret := range tx.Retirements {
 			if i == 0 {
@@ -95,9 +102,16 @@ func main() {
 			if i == 0 {
 				fmt.Println("Inputs:")
 			}
-			fmt.Printf("  contractID %x seed %x program [%x]", inp.ID.Bytes(), inp.Seed.Bytes(), inp.Program)
+			fmt.Printf("  contractID %x seed %x program %x", inp.ID.Bytes(), inp.Seed.Bytes(), inp.Program)
 			if meta := result.Inputs[i]; meta != nil {
-				fmt.Printf(" refdata [%x]", meta.RefData)
+				fmt.Printf(" refdata [%x] quorum %d pubkeys [", meta.RefData, meta.Quorum)
+				for i, p := range meta.Pubkeys {
+					if i > 0 {
+						fmt.Print(" ")
+					}
+					fmt.Printf("%x", []byte(p))
+				}
+				fmt.Print("]")
 				if value := meta.Value; value != nil {
 					fmt.Printf(" assetID %x amount %d anchor %x", value.AssetID.Bytes(), value.Amount, value.Anchor)
 				}
@@ -108,13 +122,16 @@ func main() {
 			if i == 0 {
 				fmt.Println("Outputs:")
 			}
-			fmt.Printf("  contractID %x seed %x program [%x]", out.ID.Bytes(), out.Seed.Bytes(), out.Program)
+			fmt.Printf("  contractID %x seed %x program %x", out.ID.Bytes(), out.Seed.Bytes(), out.Program)
 			if meta := result.Outputs[i]; meta != nil {
-				var pkstrs []string
-				for _, p := range meta.Pubkeys {
-					pkstrs = append(pkstrs, hex.EncodeToString(p))
+				fmt.Printf(" refdata [%x] tokentags [%x] quorum %d pubkeys [", meta.RefData, meta.TokenTags, meta.Quorum)
+				for i, p := range meta.Pubkeys {
+					if i > 0 {
+						fmt.Print(" ")
+					}
+					fmt.Printf("%x", []byte(p))
 				}
-				fmt.Printf(" pubkeys [%s] refdata [%x] tokentags [%x]", strings.Join(pkstrs, " "), meta.RefData, meta.TokenTags)
+				fmt.Print("]")
 				if value := meta.Value; value != nil {
 					fmt.Printf(" assetID %x amount %d anchor %x", value.AssetID.Bytes(), value.Amount, value.Anchor)
 				}

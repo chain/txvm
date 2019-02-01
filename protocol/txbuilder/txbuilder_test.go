@@ -51,7 +51,7 @@ func TestTxBuilder(t *testing.T) {
 			name: "insufficient input issuance",
 			pre: func(tpl *Template) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 99, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddOutput(1, nil, 100, bc.NewHash(newAsset), nil, nil)
 			},
 			wanterr: ErrInsufficientValue,
@@ -76,7 +76,7 @@ func TestTxBuilder(t *testing.T) {
 			name: "extra input issuance",
 			pre: func(tpl *Template) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 100, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddOutput(1, nil, 99, bc.NewHash(newAsset), nil, nil)
 			},
 			wanterr: ErrNonSigCheck,
@@ -95,7 +95,7 @@ func TestTxBuilder(t *testing.T) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 49, nil, nil)
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 47, nil, nil)
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 4, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddOutput(1, nil, 100, bc.NewHash(newAsset), nil, nil)
 			},
 			post: func(t *testing.T, tx *bc.Tx, err error) {
@@ -114,7 +114,7 @@ func TestTxBuilder(t *testing.T) {
 			name: "split issuance",
 			pre: func(tpl *Template) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 100, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddOutput(1, nil, 49, bc.NewHash(newAsset), nil, nil)
 				tpl.AddOutput(1, nil, 47, bc.NewHash(newAsset), nil, nil)
 				tpl.AddOutput(1, nil, 4, bc.NewHash(newAsset), nil, nil)
@@ -161,7 +161,7 @@ func TestTxBuilder(t *testing.T) {
 			name: "issue and spend",
 			pre: func(tpl *Template) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 49, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddInput(1, keyIDs, nil, pubkeys, 47, bc.NewHash(newAsset), []byte{1}, nil, 0)
 				tpl.AddInput(1, keyIDs, nil, pubkeys, 4, bc.NewHash(newAsset), []byte{1}, nil, 0)
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 1, nil, nil)
@@ -195,7 +195,7 @@ func TestTxBuilder(t *testing.T) {
 			name: "complex transaction",
 			pre: func(tpl *Template) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 49, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddInput(1, keyIDs, nil, pubkeys, 47, bc.NewHash(newAsset), []byte{1}, nil, 0)
 				tpl.AddInput(1, keyIDs, nil, pubkeys, 4, bc.NewHash(newAsset), []byte{1}, nil, 0)
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 1, nil, nil)
@@ -218,7 +218,7 @@ func TestTxBuilder(t *testing.T) {
 			name: "mintime & maxtime",
 			pre: func(tpl *Template) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 10, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddOutput(1, nil, 10, bc.NewHash(newAsset), nil, nil)
 				tpl.RestrictMaxTime(time.Unix(0, int64(999*time.Millisecond)))
 				tpl.RestrictMinTime(time.Unix(0, int64(100*time.Millisecond)))
@@ -241,7 +241,7 @@ func TestTxBuilder(t *testing.T) {
 			pre: func(tpl *Template) {
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, math.MaxInt64-10, nil, nil)
 				tpl.AddIssuance(2, []byte{1}, nil, 1, keyIDs, nil, pubkeys, 20, nil, nil)
-				newAsset := tpl.Issuances[0].assetID()
+				newAsset := tpl.Issuances[0].AssetID()
 				tpl.AddOutput(1, nil, math.MaxInt64-5, bc.NewHash(newAsset), nil, nil)
 				tpl.AddOutput(1, nil, 15, bc.NewHash(newAsset), nil, nil)
 			},

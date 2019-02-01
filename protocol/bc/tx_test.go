@@ -15,6 +15,8 @@ import (
 	"github.com/chain/txvm/testutil"
 )
 
+var zeroes32 [32]byte
+
 func TestNewTx(t *testing.T) {
 	cases := []struct {
 		name string
@@ -91,6 +93,24 @@ func TestNewTx(t *testing.T) {
 					{MinMS: 0, MaxMS: 10},
 				},
 				Issuances: []Issuance{{
+					Seed:    mustDecodeHash("90ad59cf76b578ec1c8bf093fe8b1c6a054465977f25aabd2ddb9bf7fe1c6494"),
+					Program: mustDecodeHex("2d2d2d332e7fc5a4b271de6397f2d28ed428972296f1547636161c9fe93ec86386d987ecaafb663e012a2d003b4044"),
+					Stack: []txvm.Data{
+						txvm.Tuple{
+							txvm.Bytes{txvm.ValueCode},
+							txvm.Int(0),
+							txvm.Bytes(zeroes32[:]),
+							txvm.Bytes(mustDecodeHex("4f907f68e3a0f9e3094e7908af571f52dd5b6e84cc7602e501c25a2fd17f1fbb")),
+						},
+						txvm.Tuple{
+							txvm.Bytes{txvm.IntCode},
+							txvm.Int(10),
+						},
+						txvm.Tuple{
+							txvm.Bytes{txvm.BytesCode},
+							txvm.Bytes{},
+						},
+					},
 					AssetID: mustDecodeHash("d8a92d34192c33551faaa500861e8bd4987847a356d54b7b2c8a6380b0bd0517"),
 					Amount:  10,
 					Anchor:  mustDecodeHex("4f907f68e3a0f9e3094e7908af571f52dd5b6e84cc7602e501c25a2fd17f1fbb"),
@@ -177,8 +197,10 @@ func TestNewTx(t *testing.T) {
 
 			c.want.Log = tx.Log
 
+			cs := spew.NewDefaultConfig()
+			cs.DisableMethods = true
 			if !reflect.DeepEqual(tx, c.want) {
-				t.Errorf("NewTx\n\tgot:  %s\n\twant: %s\n", spew.Sdump(tx), spew.Sdump(c.want))
+				t.Errorf("NewTx\n\tgot:  %s\n\twant: %s\n", cs.Sdump(tx), cs.Sdump(c.want))
 			}
 		})
 	}
