@@ -22,6 +22,14 @@ and scalability of a declarative transaction model such as Bitcoin's.
 
 ## Installation
 
+You’ll need [Go](https://golang.org/) version 1.11 or later.
+Depending on the version of Go you’re using,
+and where you choose to put your copy of the TxVM code,
+you may need to set the environment variable `GO111MODULE` to `on`.
+Details [here](https://golang.org/cmd/go/#hdr-Preliminary_module_support).
+
+Run the following command:
+
 ```sh
 go get github.com/chain/txvm/...
 ```
