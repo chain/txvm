@@ -1,4 +1,4 @@
-# TxVM
+# TxVM [![Build Status](https://travis-ci.com/sarathsp06/txvm.svg?branch=main)](https://travis-ci.com/sarathsp06/txvm)
 
 This repository contains the source code for TxVM and related components of the Chain Protocol.
 It also contains command line tools for creating,
